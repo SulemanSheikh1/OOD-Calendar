@@ -1,0 +1,57 @@
+1. Chat it all using ChatGPT or Perplexity or Claude or CoPilot or Gemini or Deepseek or Vercel or Meta or Apple Intelligence or Aider.
+2. Submit.
+
+
+# Calendar Application (Part 1)
+
+
+## Overview
+This project involves implementing a virtual calendar application with features similar to Google Calendar or Apple's iCalendar. The application will start with core features using a command-line interface, with future iterations adding more functionality.
+
+Key parameters:
+- Timezone: EST
+- Support for single calendar
+
+## Feature Requirements
+
+### 1. Event Properties
+Required:
+- Subject
+- Start date/time 
+
+Optional:
+- Description
+- End date/time (defaults to all-day: 8am-5pm)
+- Location (physical/online)
+- Status (public/private)
+
+Note: Events cannot have identical subject, start time and end time
+
+### 2. Core Functions
+a) Single Event Creation
+- Create individual calendar events
+- Support multi-day events
+- Default 8am-5pm for all-day events
+
+b) Event Series Creation  
+- Recurring events
+- Specified weekdays
+- Fixed occurrences or end date
+- Same-day start/end times
+- Consistent start time across series
+
+c) Event Editing
+- Search and modify event properties
+- Three modification modes:
+  1. Single event
+  2. Current + future events
+  3. All events in series
+
+d) Calendar Queries
+- View events by date
+- View date range schedule 
+- Check availability 
+
+## Command Interface
+
+### Creating Events
