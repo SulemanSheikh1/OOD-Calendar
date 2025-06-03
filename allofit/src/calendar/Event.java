@@ -40,4 +40,8 @@ public class Event {
             && start.equals(other.getStart())
             && end.equals(other.getEnd());
   }
+
+  public String toString() {
+    return String.format("%s %s %s", subject, start, end);
+  }
 }
