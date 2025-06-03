@@ -34,4 +34,10 @@ public class Event {
   public LocalDateTime getEnd() {
     return end;
   }
+
+  public boolean isSame(Event other) {
+    return subject.equals(other.getSubject())
+            && start.equals(other.getStart())
+            && end.equals(other.getEnd());
+  }
 }
