@@ -1,0 +1,6 @@
+create event "Team Meeting" from 2023-10-10T14:00 to 2023-10-10T15:00
+create event "Standup" on 2023-10-11 repeats MWF for 5 times
+print events on 2023-10-11
+edit event subject "Team Meeting" from 2023-10-10T14:00 to 2023-10-10T15:00 with "Important Meeting"
+show status on 2023-10-10T14:30
+exit

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * The storing and managing of all calendar events.
  */
 public class CalendarModel {
-  private List<IEvent> events;
+  private final List<IEvent> events;
 
   /**
    * Constructs an empty calendar.
@@ -21,19 +21,28 @@ public class CalendarModel {
   /**
    * Add events to the calendar.
    *
-   * @param event represents other event.
+   * @param event represents another event to add to the list.
    */
   public void addEvent(IEvent event) {
     for (int i = 0; i < events.size(); i++) {
       IEvent currEvent = events.get(i);
 
-      if (currEvent.getSubject().equals(event.getSubject())
-              && currEvent.getStart().equals(event.getStart())
-              && currEvent.getEnd().equals(event.getEnd())) {
+      if (currEvent.isSame(event)) {
         throw new IllegalArgumentException("Cannot add two events with the same subject");
       }
     }
     events.add(event);
+  }
+
+  public void removeEvent(IEvent event) {
+    for (int i = 0; i < events.size(); i++) {
+      IEvent currEvent = events.get(i);
+      if (currEvent.isSame(event)) {
+        events.remove(i);
+        return;
+      }
+    }
+    throw new IllegalArgumentException("Event not found in calendar");
   }
 
   /**
@@ -50,7 +59,10 @@ public class CalendarModel {
         result.add(currEvent);
       }
     }
-    return result;
+    if (!result.isEmpty()) {
+      return result;
+    }
+    throw new IllegalArgumentException("There are no events on this date.");
   }
 
   /**

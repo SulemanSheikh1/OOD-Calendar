@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
  *
  */
 public class Event implements IEvent {
-  private String subject;
-  private LocalDateTime start;
-  private LocalDateTime end;
-  private String location;
-  private String description;
-  private String status;
+  private final String subject;
+  private final LocalDateTime start;
+  private final LocalDateTime end;
+  private final String location;
+  private final String description;
+  private final String status;
 
 
   // An event is required to have a subject, start date and time.
@@ -27,7 +27,9 @@ public class Event implements IEvent {
     if (start == null || start.isAfter(end)) {
       throw new IllegalArgumentException("Must need a valid start date");
     }
-    if (end != null || end.isBefore(start)) {
+    if (end == null) {
+      end = start.plusHours(1);
+    } else if (end.isBefore(start)) {
       throw new IllegalArgumentException("End date cannot be before start date");
     }
 
@@ -47,7 +49,9 @@ public class Event implements IEvent {
     if (start == null || start.isAfter(end)) {
       throw new IllegalArgumentException("Must need a valid start date");
     }
-    if (end != null || end.isBefore(start)) {
+    if (end == null) {
+      end = start.plusHours(1);
+    } else if (end.isBefore(start)) {
       throw new IllegalArgumentException("End date cannot be before start date");
     }
 
@@ -91,5 +95,9 @@ public class Event implements IEvent {
 
   public String toString() {
     return String.format("%s %s %s", subject, start, end);
+  }
+
+  public boolean isEvent() {
+    return true;
   }
 }

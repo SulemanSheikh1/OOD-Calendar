@@ -4,19 +4,21 @@ import java.time.LocalDateTime;
 
 public interface IEvent {
 
-  public String getSubject();
+  String getSubject();
 
-  public LocalDateTime getStart();
+  LocalDateTime getStart();
 
-  public LocalDateTime getEnd();
+  LocalDateTime getEnd();
 
-  public String getLocation();
+  String getLocation();
 
-  public String getDescription();
+  String getDescription();
 
-  public String getStatus();
+  String getStatus();
 
-  public boolean isSame(IEvent other);
+  boolean isSame(IEvent other);
 
-  public String toString();
+  String toString();
+
+  boolean isEvent();
 }
