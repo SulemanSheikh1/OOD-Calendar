@@ -21,13 +21,13 @@ public class EventSeries {
   private final List<Event> series;
 
   /**
-   * Constructs a series of events that continues for a count of times.
+   * Constructs a series of events that continues for a specific count of times.
    *
    * @param subject The name of the event.
    * @param start When the event starts.
    * @param end When the event ends.
    * @param weekdays Determines which weekdays the event will happen.
-   * @param count
+   * @param count counts the number of occurrences.
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
                      Set<DayOfWeek> weekdays, int count) {
