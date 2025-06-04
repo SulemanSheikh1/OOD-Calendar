@@ -2,6 +2,9 @@ package calendar;
 
 import java.time.LocalDateTime;
 
+/**
+ *
+ */
 public class Event implements IEvent {
   private String subject;
   private LocalDateTime start;
@@ -74,7 +77,10 @@ public class Event implements IEvent {
 
   public String getStatus() { return status; }
 
-  public boolean isSame(Event other) {
+  public boolean isSame(IEvent other) {
+    if (other == null) {
+      return false;
+    }
     return subject.equals(other.getSubject())
             && start.equals(other.getStart())
             && end.equals(other.getEnd())

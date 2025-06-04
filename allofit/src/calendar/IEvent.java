@@ -16,7 +16,7 @@ public interface IEvent {
 
   public String getStatus();
 
-  public boolean isSame(Event other);
+  public boolean isSame(IEvent other);
 
   public String toString();
 }
