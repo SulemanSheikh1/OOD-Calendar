@@ -70,4 +70,20 @@ public class CalendarModel {
     }
     return result;
   }
+
+  /**
+   * Checks whether the event overlaps with a specific time.
+   *
+   * @param time is the time.
+   * @return whether the event overlaps.
+   */
+  public boolean isBusy(LocalDateTime time) {
+    for (int i = 0; i < events.size(); i++) {
+      IEvent currEvent = events.get(i);
+      if (currEvent.getEnd().isAfter(time) && currEvent.getStart().isBefore(time)) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
