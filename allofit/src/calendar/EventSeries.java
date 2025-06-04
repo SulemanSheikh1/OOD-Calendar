@@ -23,10 +23,10 @@ public class EventSeries {
   /**
    * Constructs a series of events that continues for a count of times.
    *
-   * @param subject
-   * @param start
-   * @param end
-   * @param weekdays
+   * @param subject The name of the event.
+   * @param start When the event starts.
+   * @param end When the event ends.
+   * @param weekdays Determines which weekdays the event will happen.
    * @param count
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
@@ -46,11 +46,11 @@ public class EventSeries {
   /**
    * Constructs a series of events that continues until a certain date.
    *
-   * @param subject
-   * @param start
-   * @param end
-   * @param weekdays
-   * @param lastDate
+   * @param subject The name of the event.
+   * @param start When the event starts.
+   * @param end When the event ends.
+   * @param weekdays Determines which weekdays the event will happen.
+   * @param lastDate The last day of which the recurring events will happen before they stop.
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
                      Set<DayOfWeek> weekdays, LocalDate lastDate) {
