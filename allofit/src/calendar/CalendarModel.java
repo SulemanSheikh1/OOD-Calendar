@@ -37,15 +37,34 @@ public class CalendarModel {
   }
 
   /**
-   * Returns all events.
+   * Get all events on that date.
    *
    * @param date represents the date.
+   * @return all events on that specific date.
    */
-  public List<IEvent> getEvents(LocalDate date) {
+  public List<IEvent> getEventsOnDate(LocalDate date) {
     List<IEvent> result = new ArrayList<>();
     for (int i = 0; i < events.size(); i++) {
       IEvent currEvent = events.get(i);
       if (currEvent.getStart().toLocalDate().equals(date)) {
+        result.add(currEvent);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Gets all events within two dates.
+   *
+   * @param beginning the start date of the range.
+   * @param ending the end date of the range.
+   * @return all events within the date range.
+   */
+  public List<IEvent> getEventsWithinDates(LocalDateTime beginning, LocalDateTime ending) {
+    List<IEvent> result = new ArrayList<>();
+    for (int i = 0; i < events.size(); i++) {
+      IEvent currEvent = events.get(i);
+      if (currEvent.getEnd().isAfter(beginning) && currEvent.getStart().isBefore(ending)) {
         result.add(currEvent);
       }
     }
