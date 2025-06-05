@@ -27,7 +27,7 @@ public class CalendarModel {
     for (int i = 0; i < events.size(); i++) {
       IEvent currEvent = events.get(i);
 
-      if (currEvent.isSame(event)) {
+      if (currEvent.isSame((Event) event)) {
         throw new IllegalArgumentException("Cannot add two events with the same subject");
       }
     }
@@ -37,12 +37,34 @@ public class CalendarModel {
   public void removeEvent(IEvent event) {
     for (int i = 0; i < events.size(); i++) {
       IEvent currEvent = events.get(i);
-      if (currEvent.isSame(event)) {
+      if (currEvent.isSame((Event) event)) {
         events.remove(i);
         return;
       }
     }
     throw new IllegalArgumentException("Event not found in calendar");
+  }
+
+  /**
+   * Finds and returns an event with the given subject and start time.
+   * Returns null if no such event exists or if more than one match is found.
+   *
+   * @param subject the subject to match
+   * @param start   the start date/time to match
+   * @return the matching IEvent, or null if not found or ambiguous
+   */
+  public IEvent findEvent(String subject, LocalDateTime start) {
+    IEvent found = null;
+    for (IEvent e : events) {
+      if (e.getSubject().equals(subject) && e.getStart().equals(start)) {
+        if (found != null) {
+          // More than one match is ambiguous
+          return null;
+        }
+        found = e;
+      }
+    }
+    return found;
   }
 
   /**
@@ -53,16 +75,12 @@ public class CalendarModel {
    */
   public List<IEvent> getEventsOnDate(LocalDate date) {
     List<IEvent> result = new ArrayList<>();
-    for (int i = 0; i < events.size(); i++) {
-      IEvent currEvent = events.get(i);
-      if (currEvent.getStart().toLocalDate().equals(date)) {
-        result.add(currEvent);
+    for (IEvent e : events) {
+      if (e.getStart().toLocalDate().equals(date)) {
+        result.add(e);
       }
     }
-    if (!result.isEmpty()) {
-      return result;
-    }
-    throw new IllegalArgumentException("There are no events on this date.");
+    return result;
   }
 
   /**
@@ -90,9 +108,25 @@ public class CalendarModel {
    * @return whether the event overlaps.
    */
   public boolean isBusy(LocalDateTime time) {
-    for (int i = 0; i < events.size(); i++) {
-      IEvent currEvent = events.get(i);
+    for (IEvent currEvent : events) {
       if (currEvent.getEnd().isAfter(time) && currEvent.getStart().isBefore(time)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if adding the given Event `e` would conflict with an existing event.
+   * We define a “conflict” to be: an existing calendar event that has the same
+   * subject, same start, and same end.  In other words, duplicates are not allowed.
+   *
+   * @param e the Event to check
+   * @return true if there is already an event equal to `e`; false otherwise
+   */
+  public boolean hasConflict(Event e) {
+    for (IEvent existing : events) {
+      if (existing.equals(e)) {
         return true;
       }
     }

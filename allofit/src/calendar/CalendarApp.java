@@ -6,16 +6,14 @@ import java.util.Scanner;
 
 /**
  * Calendar app that represents a calendar and has all the functions a calendar has.
- * You can add events, and edit.
+ * You can add events and edit.
  */
 public class CalendarApp {
-  private final CalendarModel model;
-  private final CalendarView view;
   private final CalendarController controller;
 
   public CalendarApp() {
-    model = new CalendarModel();
-    view = new CalendarView();
+    CalendarModel model = new CalendarModel();
+    CalendarView view = new CalendarView();
     controller = new CalendarController(model, view);
   }
 

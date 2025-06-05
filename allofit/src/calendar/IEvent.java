@@ -1,6 +1,7 @@
 package calendar;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Represents a general event in the calendar.
@@ -18,14 +19,14 @@ public interface IEvent {
   /**
    * Gets the start date and time of the event.
    *
-   * @return the start time as a LocalDateTime
+   * @return the start as a LocalDateTime
    */
   LocalDateTime getStart();
 
   /**
    * Gets the end date and time of the event.
    *
-   * @return the end time as a LocalDateTime
+   * @return the end as a LocalDateTime
    */
   LocalDateTime getEnd();
 
@@ -44,19 +45,11 @@ public interface IEvent {
   String getDescription();
 
   /**
-   * Gets the status of the event.
+   * Returns true if the event is public, false if it is private.
    *
-   * @return the status as a String
+   * @return boolean indicating public/private status
    */
-  String getStatus();
-
-  /**
-   * Checks if this event is the same as another event.
-   *
-   * @param other another IEvent
-   * @return true if they are same event, else false
-   */
-  boolean isSame(IEvent other);
+  boolean isPublic();
 
   /**
    * Converts the event to a string for display.
@@ -66,9 +59,39 @@ public interface IEvent {
   String toString();
 
   /**
-   * Checks if this is a single event.
+   * Returns the raw status string of this event ("public" or "private").
    *
-   * @return true if it's a single event, false if it's not (series).
+   * @return the status as a String
    */
-  boolean isEvent();
+  String getStatus();
+
+  /**
+   * If non-null, this event is part of a recurring series. All events in that
+   * recurring group share the same UUID.
+   *
+   * @return the seriesId (UUID), or null if this is not part of a series
+   */
+  UUID getSeriesId();
+
+  /**
+   * Sets the seriesId for this event. If non-null, this event belongs to
+   * that recurring series. If null, this event is treated as a standalone.
+   *
+   * @param seriesId the UUID of the series (or null to indicate no series)
+   */
+  void setSeriesId(UUID seriesId);
+
+  void setSubject(String subject);
+
+  void setStart(LocalDateTime start);
+
+  void setEnd(LocalDateTime end);
+
+  void setLocation(String location);
+
+  void setDescription(String description);
+
+  void setPublic(boolean isPublic);
+
+  boolean isSame(Event event);
 }
