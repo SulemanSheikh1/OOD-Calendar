@@ -187,6 +187,12 @@ public class Event implements IEvent {
     this.seriesId = seriesId;
   }
 
+  /**
+   * Sets the subject for this event.
+   *
+   * @param subject the new subject
+   * @throws IllegalArgumentException if subject is null or empty
+   */
   @Override
   public void setSubject(String subject) {
     if (subject == null || subject.isEmpty()) {
@@ -195,6 +201,13 @@ public class Event implements IEvent {
     this.subject = subject;
   }
 
+  /**
+   * Sets the start time for this event,
+   * Adjusted 1 hour if the new start is after the current end.
+   *
+   * @param start the new start date/time
+   * @throws IllegalArgumentException if start is null
+   */
   @Override
   public void setStart(LocalDateTime start) {
     if (start == null) {
@@ -206,6 +219,13 @@ public class Event implements IEvent {
     }
   }
 
+  /**
+   * Sets the end time for this event.
+   * Adjusted 1 hour if end is before the current start.
+   *
+   * @param end the new end date/time
+   * @throws IllegalArgumentException if end is null
+   */
   @Override
   public void setEnd(LocalDateTime end) {
     if (end == null) {
@@ -218,16 +238,33 @@ public class Event implements IEvent {
     }
   }
 
+  /**
+   * Sets the event's location.
+   * Sets it to an empty string if null.
+   *
+   * @param location the event location
+   */
   @Override
   public void setLocation(String location) {
     this.location = Objects.requireNonNullElse(location, "");
   }
 
+  /**
+   * Sets the event's description.
+   * Sets it to an empty string if null.
+   *
+   * @param description the event description
+   */
   @Override
   public void setDescription(String description) {
     this.description = Objects.requireNonNullElse(description, "");
   }
 
+  /**
+   * Sets the visibility of the event.
+   *
+   * @param isPublic true if public, false if private
+   */
   @Override
   public void setPublic(boolean isPublic) {
     if (isPublic) {
@@ -237,6 +274,12 @@ public class Event implements IEvent {
     }
   }
 
+  /**
+   * Checks if this event is the same as another.
+   *
+   * @param that the other event
+   * @return true if both events have same subject, start, and end
+   */
   @Override
   public boolean isSame(Event that) {
     return  subject.equals(that.subject)
@@ -244,16 +287,31 @@ public class Event implements IEvent {
             && end.equals(that.end);
   }
 
+  /**
+   * Compares this event to another object for equality.
+   *
+   * @param o the different object.
+   * @return true if this and other are equal events
+   */
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Event)) return false;
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof Event)) {
+      return false;
+    }
     Event that = (Event) o;
     return subject.equals(that.subject)
             && start.equals(that.start)
             && end.equals(that.end);
   }
 
+  /**
+   * Returns a hash code for this event.
+   *
+   * @return the hash code
+   */
   @Override
   public int hashCode() {
     return Objects.hash(subject, start, end);

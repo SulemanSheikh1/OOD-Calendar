@@ -7,12 +7,20 @@ package calendar;
 public class CalendarApp {
   private final CalendarController controller;
 
+  /**
+   * Constructs a CalendarApp with a new model, view, and controller.
+   */
   public CalendarApp() {
     CalendarModel model = new CalendarModel();
     CalendarView view = new CalendarView();
     controller = new CalendarController(model, view);
   }
 
+  /**
+   * The main entry point of the application.
+   *
+   * @param args Command-line arguments for mode selection
+   */
   public static void main(String[] args) {
     CalendarApp app = new CalendarApp();
 

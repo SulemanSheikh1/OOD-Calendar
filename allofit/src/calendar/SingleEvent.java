@@ -10,5 +10,7 @@ public class SingleEvent {
     this.event = event;
   }
 
-  public Event getEvent() { return event; }
+  public Event getEvent() {
+    return event;
+  }
 }

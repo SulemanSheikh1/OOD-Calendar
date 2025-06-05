@@ -34,6 +34,11 @@ public class CalendarModel {
     events.add(event);
   }
 
+  /**
+   * removes events from the calendar.
+   *
+   * @param event represents another event to remove from the list.
+   */
   public void removeEvent(IEvent event) {
     for (int i = 0; i < events.size(); i++) {
       IEvent currEvent = events.get(i);

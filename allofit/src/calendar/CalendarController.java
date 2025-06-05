@@ -70,6 +70,10 @@ public class CalendarController {
     sc.close();
   }
 
+  /**
+   * Starts the interactive mode for user input in a loop.
+   * Displays the welcome message and waits for user commands.
+   */
   public void startInteractiveMode() {
     view.displayWelcomeMessage();
     while (running) {
@@ -195,7 +199,11 @@ public class CalendarController {
     }
   }
 
-
+  /**
+   * Handles the availability status.
+   *
+   * @param command the full "show status" command with datetime
+   */
   private void handleShowStatus(String command) {
     String dateTimeStr = command.substring(command.indexOf(" on ") + 4).trim();
     LocalDateTime dateTime = parseDateTime(dateTimeStr);
@@ -210,11 +218,13 @@ public class CalendarController {
   /**
    * Handles recurring timed events.
    */
-  private void handleRecurringTimedEvent(String subject, LocalDateTime start, LocalDateTime end, String commandPart) {
+  private void handleRecurringTimedEvent(String subject, LocalDateTime start,
+                                         LocalDateTime end, String commandPart) {
     String[] repeatParts = commandPart.trim().split(" ");
 
     if (repeatParts.length < 3) {
-      throw new IllegalArgumentException("Invalid recurring event format. Expected: <weekdays> for/until <value>");
+      throw new IllegalArgumentException("Invalid recurring event format. " +
+              "Expected: <weekdays> for/until <value>");
     }
 
     String weekdayStr = repeatParts[0].toUpperCase();
@@ -227,7 +237,8 @@ public class CalendarController {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring timed event series: " + subject);
     } else {
-      throw new IllegalArgumentException("Invalid recurring event specification. Must include 'for' or 'until'.");
+      throw new IllegalArgumentException("Invalid recurring event specification. " +
+              "Must include 'for' or 'until'.");
     }
   }
 
@@ -239,8 +250,9 @@ public class CalendarController {
   private void handleEditEvent(String command) {
     String[] parts = command.split(" ");
     if (parts.length < 4) {
-      throw new IllegalArgumentException(
-              "Invalid edit command. Expected: <edit|edits|edit series> <property> <subject> from <start> with <newValue>");
+      throw new IllegalArgumentException("Invalid edit command. " +
+              "Expected: <edit|edits|edit series> <property> <subject> " +
+              "from <start> with <newValue>");
     }
 
     String editType;
@@ -406,8 +418,7 @@ public class CalendarController {
   }
 
   /**
-   * Edits every occurrence in the same series (past, present, and future). If the base
-   * event is not part of any series, behaves like editSingleEvent().
+   * Edits every occurrence in the same series.
    *
    * @param event      the IEvent in the series
    * @param property   which property to modify
@@ -481,7 +492,8 @@ public class CalendarController {
         copy.setDescription(newValue);
         break;
       case "status":
-        copy.setPublic(newValue.equalsIgnoreCase("public") || newValue.equalsIgnoreCase("true"));
+        copy.setPublic(newValue.equalsIgnoreCase("public")
+                || newValue.equalsIgnoreCase("true"));
         break;
       default:
         throw new IllegalArgumentException("Invalid property: " + property);
@@ -490,7 +502,7 @@ public class CalendarController {
   }
 
   /**
-   * Helper to parse a date-time string of the form "YYYY-MM-DDThh:mm".
+   * Helper to parse a date-time string..
    *
    * @param s the date-time text
    * @return the parsed LocalDateTime
@@ -536,11 +548,22 @@ public class CalendarController {
     }
   }
 
-  private void handleRecurringAllDayEvent(String subject, LocalDateTime start, LocalDateTime end, String commandPart) {
+  /**
+   * Handles the recurring all-day events based on
+   * the given subject, start/end time, and repetition.
+   *
+   * @param subject the event subject
+   * @param start the start time of the event
+   * @param end the end time of the event
+   * @param commandPart the repeat specification string
+   */
+  private void handleRecurringAllDayEvent(String subject, LocalDateTime start,
+                                          LocalDateTime end, String commandPart) {
     String[] repeatParts = commandPart.trim().split(" ");
 
     if (repeatParts.length < 3) {
-      throw new IllegalArgumentException("Invalid recurring event format. Expected: <weekdays> for/until <value>");
+      throw new IllegalArgumentException("Invalid recurring event format. " +
+              "Expected: <weekdays> for/until <value>");
     }
 
     Set<DayOfWeek> days = parseWeekdays(repeatParts[0].toUpperCase());
@@ -552,14 +575,16 @@ public class CalendarController {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring all-day event series: " + subject);
     } else {
-      throw new IllegalArgumentException("Invalid recurring event specification. Must include 'for' or 'until'.");
+      throw new IllegalArgumentException("Invalid recurring event specification. " +
+              "Must include 'for' or 'until'.");
     }
   }
 
   /**
    * Helper that creates recurring events for a certain number of times.
    */
-  private void handleRecurringEventSeriesHelper(String subject, LocalDateTime start, LocalDateTime end, String[] repeatParts, Set<DayOfWeek> days) {
+  private void handleRecurringEventSeriesHelper(String subject, LocalDateTime start, LocalDateTime end,
+                                                String[] repeatParts, Set<DayOfWeek> days) {
     LocalDate untilDate = LocalDate.parse(repeatParts[2], DateTimeFormatter.ISO_DATE);
     EventSeries series = new EventSeries(subject, start, end, days, untilDate);
     List<Event> events = series.getEvents();
@@ -571,7 +596,8 @@ public class CalendarController {
   /**
    * Helper that creates recurring events that go until a specific date.
    */
-  private void handleRecurringEventHelper(String subject, LocalDateTime start, LocalDateTime end, String[] repeatParts, Set<DayOfWeek> days) {
+  private void handleRecurringEventHelper(String subject, LocalDateTime start, LocalDateTime end,
+                                          String[] repeatParts, Set<DayOfWeek> days) {
     int count = Integer.parseInt(repeatParts[2]);
     EventSeries series = new EventSeries(subject, start, end, days, count);
     List<Event> events = series.getEvents();
@@ -618,6 +644,13 @@ public class CalendarController {
     return days;
   }
 
+  /**
+   * Extracts quoted subject name from the input string.
+   * And handles unquoted words.
+   *
+   * @param input the raw input string after "create event"
+   * @return the parsed subject string including quotes
+   */
   private String extractQuotedSubject(String input) {
     if (input.startsWith("\"")) {
       int endQuote = input.indexOf("\"", 1);

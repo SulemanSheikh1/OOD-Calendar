@@ -5,7 +5,7 @@ import java.util.UUID;
 
 /**
  * Represents a general event in the calendar.
- * This interface defines the basic information and behaviors all events have.
+ * This interface defines information and behaviors all events have.
  */
 public interface IEvent {
 
@@ -59,17 +59,17 @@ public interface IEvent {
   String toString();
 
   /**
-   * Returns the raw status string of this event ("public" or "private").
+   * Returns the status string of this event ("public" or "private").
    *
    * @return the status as a String
    */
   String getStatus();
 
   /**
-   * If non-null, this event is part of a recurring series. All events in that
-   * recurring group share the same UUID.
+   * If not null, this event is part of a recurring series.
+   * All events in that recurring group share the same UUID.
    *
-   * @return the seriesId (UUID), or null if this is not part of a series
+   * @return the seriesId, or null if this is not part of a series
    */
   UUID getSeriesId();
 
@@ -77,21 +77,57 @@ public interface IEvent {
    * Sets the seriesId for this event. If non-null, this event belongs to
    * that recurring series. If null, this event is treated as a standalone.
    *
-   * @param seriesId the UUID of the series (or null to indicate no series)
+   * @param seriesId the UUID of the series
    */
   void setSeriesId(UUID seriesId);
 
+  /**
+   * Sets the subject of the event.
+   *
+   * @param subject the new subject
+   */
   void setSubject(String subject);
 
+  /**
+   * Sets the start time of the event.
+   *
+   * @param start the new start date/time
+   */
   void setStart(LocalDateTime start);
 
+  /**
+   * Sets the end time of the event.
+   *
+   * @param end the new end date/time.
+   */
   void setEnd(LocalDateTime end);
 
+  /**
+   * Sets the location of the event.
+   *
+   * @param location the new location
+   */
   void setLocation(String location);
 
+  /**
+   * Sets the description of the event.
+   *
+   * @param description the new description
+   */
   void setDescription(String description);
 
+  /**
+   * Sets the visibility of the event.
+   *
+   * @param isPublic true if public, false if private
+   */
   void setPublic(boolean isPublic);
 
+  /**
+   * Checks if another event has the same.
+   *
+   * @param event the event
+   * @return true if both events have same subject, start, and end
+   */
   boolean isSame(Event event);
 }

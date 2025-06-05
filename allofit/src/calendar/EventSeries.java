@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * Represents a recurring series of events in the calendar.
+ * The series is either a repetition count or an end date.
  */
 public class EventSeries {
   private final String subject;
@@ -129,6 +130,11 @@ public class EventSeries {
     }
   }
 
+  /**
+   * Gets the events.
+   *
+   * @return the events in a list
+   */
   public List<Event> getEvents() {
     return new ArrayList<>(series);
   }
