@@ -76,18 +76,21 @@ public class CalendarController {
     String subject = extractQuotedSubject(remaining);
     remaining = remaining.substring(subject.length()).trim();
 
-    if (!remaining.startsWith(" on ")) {
+    if (!remaining.startsWith("on ")) {
       throw new IllegalArgumentException("Missing 'on' in all-day event creation");
     }
 
-    String datePart = remaining.substring(4).trim();
-    LocalDate date = LocalDate.parse(datePart.split(" ")[0], DateTimeFormatter.ISO_DATE);
+    remaining = remaining.substring(3).trim(); // after "on "
+
+    String[] parts = remaining.split(" repeats ", 2);
+    String dateStr = parts[0].trim();
+    LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
 
     LocalDateTime start = date.atTime(8, 0);
     LocalDateTime end = date.atTime(17, 0);
 
-    if (datePart.contains(" repeats ")) {
-      handleRecurringAllDayEvent(subject, start, end, datePart);
+    if (parts.length > 1) {
+      handleRecurringAllDayEvent(subject, start, end, parts[1]);
     } else {
       Event event = new Event(subject, start, end);
       model.addEvent(event);
@@ -100,21 +103,23 @@ public class CalendarController {
     String subject = extractQuotedSubject(remaining);
     remaining = remaining.substring(subject.length()).trim();
 
-    if (!remaining.startsWith(" from ")) {
+    if (!remaining.startsWith("from ")) {
       throw new IllegalArgumentException("Missing 'from' in timed event creation");
     }
 
-    String[] parts = remaining.substring(6).split(" to ");
+    String[] parts = remaining.substring(5).split(" to ");
     if (parts.length < 2) {
       throw new IllegalArgumentException("Missing 'to' in timed event creation");
     }
 
     LocalDateTime start = parseDateTime(parts[0].trim());
     String endPart = parts[1].trim();
-    LocalDateTime end = parseDateTime(endPart.split(" ")[0]);
 
-    if (endPart.contains(" repeats ")) {
-      handleRecurringTimedEvent(subject, start, end, endPart);
+    String[] endParts = endPart.split(" repeats ", 2);
+    LocalDateTime end = parseDateTime(endParts[0].trim());
+
+    if (endParts.length > 1) {
+      handleRecurringTimedEvent(subject, start, end, endParts[1]);
     } else {
       Event event = new Event(subject, start, end);
       model.addEvent(event);
@@ -140,22 +145,22 @@ public class CalendarController {
   }
 
   private void handleRecurringAllDayEvent(String subject, LocalDateTime start, LocalDateTime end, String commandPart) {
-    String[] parts = commandPart.split(" repeats ");
-    if (parts.length < 2) {
-      throw new IllegalArgumentException("Invalid recurring event format");
+    String[] repeatParts = commandPart.trim().split(" ");
+
+    if (repeatParts.length < 3) {
+      throw new IllegalArgumentException("Invalid recurring event format. Expected: <weekdays> for/until <value>");
     }
 
-    String[] repeatParts = parts[1].split(" ");
-    Set<DayOfWeek> days = parseWeekdays(repeatParts[0]);
+    Set<DayOfWeek> days = parseWeekdays(repeatParts[0].toUpperCase());
 
-    if (repeatParts.length > 1 && repeatParts[1].equals("for")) {
+    if (repeatParts[1].equals("for")) {
       handleRecurringEventHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring all-day event series: " + subject);
-    } else if (repeatParts.length > 1 && repeatParts[1].equals("until")) {
+    } else if (repeatParts[1].equals("until")) {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring all-day event series: " + subject);
     } else {
-      throw new IllegalArgumentException("Invalid recurring event specification");
+      throw new IllegalArgumentException("Invalid recurring event specification. Must include 'for' or 'until'.");
     }
   }
 
@@ -178,22 +183,24 @@ public class CalendarController {
   }
 
   private void handleRecurringTimedEvent(String subject, LocalDateTime start, LocalDateTime end, String commandPart) {
-    String[] parts = commandPart.split(" repeats ");
-    if (parts.length < 2) {
-      throw new IllegalArgumentException("Invalid recurring event format");
+    String[] repeatParts = commandPart.trim().split(" ");
+
+    if (repeatParts.length < 3) {
+      throw new IllegalArgumentException("Invalid recurring event format. Expected: <weekdays> for/until <value>");
     }
 
-    String[] repeatParts = parts[1].split(" ");
-    Set<DayOfWeek> days = parseWeekdays(repeatParts[0]);
+    // Only take the first token, and force it to uppercase
+    String weekdayStr = repeatParts[0].toUpperCase();
+    Set<DayOfWeek> days = parseWeekdays(weekdayStr);
 
-    if (repeatParts.length > 1 && repeatParts[1].equals("for")) {
+    if (repeatParts[1].equals("for")) {
       handleRecurringEventHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring timed event series: " + subject);
-    } else if (repeatParts.length > 1 && repeatParts[1].equals("until")) {
+    } else if (repeatParts[1].equals("until")) {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring timed event series: " + subject);
     } else {
-      throw new IllegalArgumentException("Invalid recurring event specification");
+      throw new IllegalArgumentException("Invalid recurring event specification. Must include 'for' or 'until'.");
     }
   }
 
@@ -278,19 +285,27 @@ public class CalendarController {
       throw new IllegalArgumentException("Invalid edit command");
     }
 
-    String editType = parts[0];
+    String editType = parts[0]; // edit, edits, series
     String property = parts[1];
     String remaining = command.substring(editType.length() + property.length() + 2).trim();
 
     String subject = extractQuotedSubject(remaining);
     remaining = remaining.substring(subject.length()).trim();
 
-    if (!remaining.startsWith(" from ")) {
-      throw new IllegalArgumentException("Missing 'from' in edit command");
+    boolean hasEnd = remaining.contains(" to ");
+    if (!hasEnd && editType.equals("edit")) {
+      throw new IllegalArgumentException("Missing 'to' for single event edit");
     }
 
-    String dateTimeStr = remaining.substring(6).split(" ")[0];
-    LocalDateTime startTime = parseDateTime(dateTimeStr);
+    String startStr = remaining.substring(remaining.indexOf("from ") + 5,
+            hasEnd ? remaining.indexOf(" to ") : remaining.indexOf(" with ")).trim();
+    LocalDateTime startTime = parseDateTime(startStr);
+
+    LocalDateTime endTime = null;
+    if (hasEnd) {
+      String endStr = remaining.substring(remaining.indexOf(" to ") + 4, remaining.indexOf(" with ")).trim();
+      endTime = parseDateTime(endStr);
+    }
 
     if (!remaining.contains(" with ")) {
       throw new IllegalArgumentException("Missing 'with' in edit command");
@@ -298,94 +313,91 @@ public class CalendarController {
 
     String newValue = remaining.substring(remaining.indexOf(" with ") + 6).trim();
 
-    List<IEvent> matchingEvents = new ArrayList<>();
-    List<IEvent> allEvents = model.getEventsWithinDates(startTime, startTime.plusMinutes(1));
-    for (IEvent event : allEvents) {
-      if (event.getSubject().equals(subject.replace("\"", ""))) {
-        matchingEvents.add(event);
+    List<IEvent> candidates = model.getEventsWithinDates(startTime.minusMinutes(1), startTime.plusHours(1));
+    IEvent matchingEvent = null;
+
+    for (IEvent e : candidates) {
+      boolean match = e.getSubject().equals(subject.replace("\"", "")) && e.getStart().equals(startTime);
+      if (hasEnd) {
+        match = match && e.getEnd().equals(endTime);
+      }
+      if (match) {
+        matchingEvent = e;
+        break;
       }
     }
 
-    if (matchingEvents.isEmpty()) {
+    if (matchingEvent == null) {
       throw new IllegalArgumentException("No matching event found");
     }
 
-    IEvent eventToEdit = matchingEvents.get(0);
-
     switch (editType) {
       case "edit":
-        editSingleEvent(eventToEdit, property, newValue);
+        editSingleEvent(matchingEvent, property, newValue);
         break;
       case "edits":
-        editFutureEvents(eventToEdit, property, newValue);
+        editFutureEvents(matchingEvent, property, newValue);
         break;
       case "series":
-        editWholeSeries(eventToEdit, property, newValue);
+        editWholeSeries(matchingEvent, property, newValue);
         break;
+      default:
+        throw new IllegalArgumentException("Invalid edit type");
     }
   }
 
   private void editSingleEvent(IEvent event, String property, String newValue) {
-
-
-    Event modifiedEvent = createModifiedEvent(event, property, newValue);
+    Event modified = createModifiedEvent(event, property, newValue);
     model.removeEvent(event);
-    model.addEvent(modifiedEvent);
+    model.addEvent(modified);
     System.out.println("Edited single event");
   }
 
   private void editFutureEvents(IEvent event, String property, String newValue) {
-    if (!(event.isEvent())) {
+    if (!event.isEvent()) {
       throw new IllegalArgumentException("Can only edit Event instances");
     }
 
-    Event firstEvent = (Event) event;
-    List<IEvent> allEvents = model.getEventsWithinDates(
-            firstEvent.getStart().minusDays(1),
-            LocalDateTime.MAX
-    );
+    Event base = (Event) event;
+    List<IEvent> all = model.getEventsWithinDates(base.getStart().minusDays(1), LocalDateTime.MAX);
 
     boolean foundStart = false;
-    int modifiedCount = 0;
+    int count = 0;
 
-    for (IEvent e : allEvents) {
-      if (e.isSame(firstEvent)) {
+    for (IEvent e : all) {
+      if (e.isSame(base)) {
         foundStart = true;
       }
-      if (foundStart && e.getSubject().equals(firstEvent.getSubject())) {
-        Event modifiedEvent = createModifiedEvent( e, property, newValue);
+      if (foundStart && e.getSubject().equals(base.getSubject())) {
+        Event modified = createModifiedEvent(e, property, newValue);
         model.removeEvent(e);
-        model.addEvent(modifiedEvent);
-        modifiedCount++;
+        model.addEvent(modified);
+        count++;
       }
     }
 
-    System.out.println("Modified " + modifiedCount + " future events in series");
+    System.out.println("Modified " + count + " future events in series");
   }
 
   private void editWholeSeries(IEvent event, String property, String newValue) {
-    if (!(event.isEvent())) {
+    if (!event.isEvent()) {
       throw new IllegalArgumentException("Can only edit Event instances");
     }
 
-    Event firstEvent = (Event) event;
-    List<IEvent> allEvents = model.getEventsWithinDates(
-            LocalDateTime.MIN,
-            LocalDateTime.MAX
-    );
+    Event base = (Event) event;
+    List<IEvent> all = model.getEventsWithinDates(LocalDateTime.MIN, LocalDateTime.MAX);
 
-    int modifiedCount = 0;
-
-    for (IEvent e : allEvents) {
-      if (e.getSubject().equals(firstEvent.getSubject())) {
-        Event modifiedEvent = createModifiedEvent(e, property, newValue);
+    int count = 0;
+    for (IEvent e : all) {
+      if (e.getSubject().equals(base.getSubject())) {
+        Event modified = createModifiedEvent(e, property, newValue);
         model.removeEvent(e);
-        model.addEvent(modifiedEvent);
-        modifiedCount++;
+        model.addEvent(modified);
+        count++;
       }
     }
 
-    System.out.println("Modified " + modifiedCount + " events in entire series");
+    System.out.println("Modified " + count + " events in entire series");
   }
 
   private Event createModifiedEvent(IEvent original, String property, String newValue) {
@@ -415,6 +427,8 @@ public class CalendarController {
       case "status":
         status = newValue;
         break;
+      default:
+        throw new IllegalArgumentException("Invalid property: " + property);
     }
 
     return new Event(subject, start, end, location, description, status);
