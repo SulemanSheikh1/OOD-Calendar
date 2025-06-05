@@ -1,0 +1,3 @@
+create event "MorningMeeting" from 2025-06-10T08:00 to 2025-06-10T09:00
+show status on 2025-06-10T08:30
+print events on 2025-06-10

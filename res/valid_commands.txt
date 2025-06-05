@@ -1,6 +1,9 @@
-create event "Team Meeting" from 2023-10-10T14:00 to 2023-10-10T15:00
-create event "Standup" on 2023-10-11 repeats MWF for 5 times
-print events on 2023-10-11
-edit event subject "Team Meeting" from 2023-10-10T14:00 to 2023-10-10T15:00 with "Important Meeting"
-show status on 2023-10-10T14:30
+create event "TeamSync" from 2025-06-01T09:00 to 2025-06-01T10:00
+create event "AllDayOff" on 2025-06-02
+create event "Yoga" on 2025-06-03 repeats MF for 3
+print events on 2025-06-01
+show status on 2025-06-01T09:30
+print events from 2025-06-01T00:00 to 2025-06-04T23:59
+edit event subject "TeamSync" from 2025-06-01T09:00 to "ProjectSync"
+print events on 2025-06-01
 exit
