@@ -33,7 +33,7 @@ public class CalendarAppTest {
   }
 
   @Test
-  public void testGenerateByCountMWF2Occ() {
+  public void testGenerateByCountTT2Occ() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 3, 13, 0);
     LocalDateTime end = LocalDateTime.of(2025, 6, 3, 14, 0);
     Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY);
@@ -48,5 +48,21 @@ public class CalendarAppTest {
     assertEquals("2025-06-05T14:00", events.get(1).getEnd().toString());
     assertEquals("Beach Time", events.get(0).getSubject());
     assertEquals("Beach Time", events.get(1).getSubject());
+  }
+
+  @Test
+  public void testGenerateByCountS1Occ() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 7, 3, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 7, 5, 0);
+    Set<DayOfWeek> days = Set.of(DayOfWeek.SATURDAY);
+
+    EventSeries series = new EventSeries("Dancing", start, end, days, 1);
+    List<Event> events = series.getEvents();
+
+    assertEquals(1, events.size());
+    assertEquals("2025-06-07T03:00", events.get(0).getStart().toString());
+    assertEquals("2025-06-07T05:00", events.get(0).getEnd().toString());
+    assertEquals("Dancing", events.get(0).getSubject());
+    assertEquals("Dancing", events.get(0).getSubject());
   }
 }
