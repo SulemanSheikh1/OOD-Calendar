@@ -16,30 +16,6 @@ import static org.junit.Assert.assertEquals;
 public class CalendarAppTest {
 
   @Test
-  public void testCountEmptyDays() {
-    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
-    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
-    Set<DayOfWeek> days = Set.of();
-
-    EventSeries series = new EventSeries("Empty", start, end, days, 3);
-
-    assertEquals(0, series.getEvents().size());
-  }
-
-  @Test
-  public void testDateEmptyDays() {
-    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
-    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
-    Set<DayOfWeek> days = Set.of();
-    LocalDate until = LocalDate.parse("2025-06-30");
-
-    EventSeries series = new EventSeries("Empty", start, end, days, until);
-    List<Event> events = series.getEvents();
-
-    assertEquals(0, events.size());
-  }
-
-  @Test
   public void testCountZeroEvents() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
     LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
@@ -55,7 +31,7 @@ public class CalendarAppTest {
     LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
     Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
-    LocalDate until = LocalDate.parse("2025-06-01");
+    LocalDate until = LocalDate.parse("2025-06-02");
 
     EventSeries series = new EventSeries("Zero Events", start, end, days, until);
     List<Event> events = series.getEvents();
@@ -85,7 +61,7 @@ public class CalendarAppTest {
   }
 
   @Test
-  public void testGenerateByCountTT2Occ() {
+  public void testGenerateByCountTR2Occ() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 3, 13, 0);
     LocalDateTime end = LocalDateTime.of(2025, 6, 3, 14, 0);
     Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY);
@@ -155,7 +131,7 @@ public class CalendarAppTest {
   }
 
   @Test
-  public void testGenerateByDateTT2Occ() {
+  public void testGenerateByDateTR2Occ() {
     LocalDateTime start = LocalDateTime.parse("2025-06-03T13:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-03T14:00");
     Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY);
@@ -203,5 +179,109 @@ public class CalendarAppTest {
     assertEquals("2025-06-08T10:00", events.get(6).getStart().toString());
     assertEquals("2025-06-02T11:00", events.get(0).getEnd().toString());
     assertEquals("2025-06-08T11:00", events.get(6).getEnd().toString());
+  }
+
+  @Test
+  public void testSkipsToFirstValidDay() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00"); // Monday
+    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
+    LocalDate until = LocalDate.parse("2025-06-06");
+
+    EventSeries series = new EventSeries("Skip Start", start, end, days, until);
+    List<Event> events = series.getEvents();
+
+    assertEquals(2, events.size());
+    assertEquals("2025-06-04T09:00", events.get(0).getStart().toString()); // Wednesday
+    assertEquals("2025-06-06T09:00", events.get(1).getStart().toString()); // Friday
+  }
+
+  @Test
+  public void testNotMatchingDay() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00"); // Monday
+    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY); // Only Tuesday
+    LocalDate until = LocalDate.parse("2025-06-05"); // Thursday (not included)
+
+    EventSeries series = new EventSeries("Day off", start, end, days, until);
+    List<Event> events = series.getEvents();
+
+    assertEquals(1, events.size());
+    assertEquals("2025-06-03T09:00", events.get(0).getStart().toString()); // Only one Tuesday
+  }
+
+  @Test
+  public void testAdjacentWeekdaysShortRange() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-03T15:00");
+    LocalDateTime end = LocalDateTime.parse("2025-06-03T16:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+    LocalDate until = LocalDate.parse("2025-06-06");
+
+    EventSeries series = new EventSeries("Work Week", start, end, days, until);
+    List<Event> events = series.getEvents();
+
+    assertEquals(4, events.size());
+    assertEquals("2025-06-03T15:00", events.get(0).getStart().toString());
+    assertEquals("2025-06-04T15:00", events.get(1).getStart().toString());
+    assertEquals("2025-06-05T15:00", events.get(2).getStart().toString());
+    assertEquals("2025-06-06T15:00", events.get(3).getStart().toString());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEventSeriesSpanningMultipleDaysShouldThrow() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-06T23:00");
+    LocalDateTime end = LocalDateTime.parse("2025-06-07T01:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.FRIDAY);
+    LocalDate until = LocalDate.parse("2025-06-06");
+
+    new EventSeries("Late Night", start, end, days, until);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testNegativeCountThrows() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
+
+    new EventSeries("Invalid", start, end, days, -1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testUntilBeforeStartThrows() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-10T09:00");
+    LocalDateTime end = LocalDateTime.parse("2025-06-10T10:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
+    LocalDate until = LocalDate.parse("2025-06-01");
+
+    new EventSeries("Invalid", start, end, days, until);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEmptyDaysThrows() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
+    Set<DayOfWeek> days = Set.of();
+
+    new EventSeries("Invalid", start, end, days, 5);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testCountEmptyDays() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
+    Set<DayOfWeek> days = Set.of();
+
+    EventSeries series = new EventSeries("Empty", start, end, days, 3);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testDateEmptyDays() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
+    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
+    Set<DayOfWeek> days = Set.of();
+    LocalDate until = LocalDate.parse("2025-06-30");
+
+    EventSeries series = new EventSeries("Empty", start, end, days, until);
+    List<Event> events = series.getEvents();
   }
 }

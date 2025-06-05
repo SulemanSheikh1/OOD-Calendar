@@ -31,7 +31,18 @@ public class EventSeries {
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
                      Set<DayOfWeek> weekdays, int count) {
-
+    if (subject == null || subject.isEmpty() || start == null || end == null || weekdays == null) {
+      throw new IllegalArgumentException("Arguments cant be null/empty.");
+    }
+    if (weekdays.isEmpty()) {
+      throw new IllegalArgumentException("Weekdays cant be empty.");
+    }
+    if (!end.isAfter(start)) {
+      throw new IllegalArgumentException("End needs to be after start.");
+    }
+    if (count < 0) {
+      throw new IllegalArgumentException("Count cant be negative.");
+    }
 
     this.subject = subject;
     this.start = start;
@@ -54,6 +65,20 @@ public class EventSeries {
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
                      Set<DayOfWeek> weekdays, LocalDate lastDate) {
+    if (subject == null || subject.isEmpty() || start == null || end == null ||
+            weekdays == null || lastDate == null) {
+      throw new IllegalArgumentException("Arguments cant be null/empty.");
+    }
+    if (weekdays.isEmpty()) {
+      throw new IllegalArgumentException("Weekdays cant be empty.");
+    }
+    if (!end.isAfter(start)) {
+      throw new IllegalArgumentException("End needs to be after start.");
+    }
+    if (lastDate.isBefore(start.toLocalDate())) {
+      throw new IllegalArgumentException("Until date cant be before start date.");
+    }
+
     this.subject = subject;
     this.start = start;
     this.end = end;
