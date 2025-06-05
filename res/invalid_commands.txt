@@ -1,4 +1,7 @@
-create event "" from 2023-10-10T14:00 to 2023-10-10T13:00
-edit event location "Nonexistent" from 2023-01-01T00:00 with "Room 101"
-print events from invalid-date to 2023-10-10
+create event "BadEvent" 2025-06-10
+create event "Overlap" from 2025-06-01T09:00 2025-06-01T10:00
+create event "BadWeekday" on 2025-06-05 repeats Z for 2
+create event "Incomplete" from 2025-06-01T08:00 to
+print events at 2025-06-01
+edit events location "TeamSync" from 2025-06-01T09:00
 exit
