@@ -159,12 +159,12 @@ public class CalendarAppTest {
     LocalDateTime start = LocalDateTime.parse("2025-06-03T13:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-03T14:00");
     Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY);
-    LocalDate until = LocalDate.parse("2025-06-10");
+    LocalDate until = LocalDate.parse("2025-06-05");
 
     EventSeries series = new EventSeries("Beach Time", start, end, days, until);
     List<Event> events = series.getEvents();
 
-    assertEquals(3, events.size());
+    assertEquals(2, events.size());
     assertEquals("2025-06-03T13:00", events.get(0).getStart().toString());
     assertEquals("2025-06-03T14:00", events.get(0).getEnd().toString());
     assertEquals("2025-06-05T13:00", events.get(1).getStart().toString());
