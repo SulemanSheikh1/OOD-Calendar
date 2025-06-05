@@ -68,7 +68,7 @@ public interface IEvent {
   /**
    * Checks if this is a single event.
    *
-   * @return true if it's a single event, false if it's not (series)
+   * @return true if it's a single event, false if it's not (series).
    */
   boolean isEvent();
 }
