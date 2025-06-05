@@ -16,6 +16,17 @@ import static org.junit.Assert.assertEquals;
 public class CalendarAppTest {
 
   @Test
+  public void testValid() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00"); // Monday
+    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
+
+    EventSeries series = new EventSeries("Start Day", start, end, days, 1);
+
+    assertEquals("2025-06-02T09:00", series.getEvents().get(0).getStart().toString());
+  }
+
+  @Test
   public void testCountZeroEvents() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
     LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
@@ -212,6 +223,26 @@ public class CalendarAppTest {
     assertEquals("2025-06-04T15:00", events.get(1).getStart().toString());
     assertEquals("2025-06-05T15:00", events.get(2).getStart().toString());
     assertEquals("2025-06-06T15:00", events.get(3).getStart().toString());
+    assertEquals("2025-06-03T16:00", events.get(0).getEnd().toString());
+    assertEquals("2025-06-04T16:00", events.get(1).getEnd().toString());
+    assertEquals("2025-06-05T16:00", events.get(2).getEnd().toString());
+    assertEquals("2025-06-06T16:00", events.get(3).getEnd().toString());
+    assertEquals("Work Week", events.get(0).getSubject());
+    assertEquals("Work Week", events.get(2).getSubject());
+    assertEquals("Work Week", events.get(3).getSubject());
+    assertEquals("Work Week", events.get(3).getSubject());
+  }
+
+  @Test
+  public void testEqualsCountDate() {
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
+    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
+
+    EventSeries byCount = new EventSeries("Test", start, end, days, 3);
+    EventSeries byDate = new EventSeries("Test", start, end, days, LocalDate.parse("2025-06-06"));
+
+    assertEquals(byCount.getEvents().size(), byDate.getEvents().size());
   }
 
   @Test(expected = IllegalArgumentException.class)
