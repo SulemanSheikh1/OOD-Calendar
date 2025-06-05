@@ -23,11 +23,11 @@ public class EventSeries {
   /**
    * Constructs a series of events that continues for a specific count of times.
    *
-   * @param subject The name of the event.
-   * @param start When the event starts.
-   * @param end When the event ends.
+   * @param subject  The name of the event.
+   * @param start    When the event starts.
+   * @param end      When the event ends.
    * @param weekdays Determines which weekdays the event will happen.
-   * @param count counts the number of occurrences.
+   * @param count    counts the number of occurrences.
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
                      Set<DayOfWeek> weekdays, int count) {
@@ -46,9 +46,9 @@ public class EventSeries {
   /**
    * Constructs a series of events that continues until a certain date.
    *
-   * @param subject The name of the event.
-   * @param start When the event starts.
-   * @param end When the event ends.
+   * @param subject  The name of the event.
+   * @param start    When the event starts.
+   * @param end      When the event ends.
    * @param weekdays Determines which weekdays the event will happen.
    * @param lastDate The last day of which the recurring events will happen before they stop.
    */
@@ -69,6 +69,10 @@ public class EventSeries {
    * that repeat on specific days of the week up to the specified count.
    */
   private void generateByCount() {
+    if (repeatingDays == null || repeatingDays.isEmpty()) {
+      return;
+    }
+
     LocalDate currDate = start.toLocalDate();
     int counter = 0;
 

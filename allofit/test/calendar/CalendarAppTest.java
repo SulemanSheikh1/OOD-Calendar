@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 
 public class CalendarAppTest {
 
-  /*
   @Test
   public void testEmptyDays() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
@@ -22,7 +21,6 @@ public class CalendarAppTest {
 
     assertEquals(0, series.getEvents().size());
   }
-   */
 
   @Test
   public void testCountZeroEvents() {
@@ -88,5 +86,21 @@ public class CalendarAppTest {
     assertEquals("2025-06-07T05:00", events.get(0).getEnd().toString());
     assertEquals("Dancing", events.get(0).getSubject());
     assertEquals("Dancing", events.get(0).getSubject());
+  }
+
+  @Test
+  public void testAllWeekdays() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 10, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 11, 0);
+    Set<DayOfWeek> days = Set.of(DayOfWeek.values());
+
+    EventSeries series = new EventSeries("Party", start, end, days, 7);
+    List<Event> events = series.getEvents();
+
+    assertEquals(7, events.size());
+    assertEquals("2025-06-02T10:00", events.get(0).getStart().toString());
+    assertEquals("2025-06-08T10:00", events.get(6).getStart().toString());
+    assertEquals("2025-06-02T11:00", events.get(0).getEnd().toString());
+    assertEquals("2025-06-08T11:00", events.get(6).getEnd().toString());
   }
 }
