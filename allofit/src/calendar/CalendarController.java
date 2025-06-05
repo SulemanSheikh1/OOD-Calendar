@@ -41,6 +41,11 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Figures out what the user wants to do and runs the right method.
+   *
+   * @param command the user's input
+   */
   public void processCommand(String command) {
     try {
       if (command.startsWith("create event")) {
@@ -61,6 +66,12 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Handles commands that start with "create event".
+   * Figures out if it’s a timed event or all-day event.
+   *
+   * @param command the full "create event" command
+   */
   private void handleCreateEvent(String command) {
     if (command.contains(" on ")) {
       handleCreateAllDayEvent(command);
@@ -71,6 +82,12 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Creates an all-day event from 8:00 to 17:00.
+   * Can also create recurring all-day events.
+   *
+   * @param command the input string for creating an all-day event
+   */
   private void handleCreateAllDayEvent(String command) {
     String remaining = command.substring("create event ".length());
     String subject = extractQuotedSubject(remaining);
@@ -98,6 +115,12 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Creates a timed event with specific start and end times.
+   * Can also handle recurring timed events.
+   *
+   * @param command the input string for creating a timed event
+   */
   private void handleCreateTimedEvent(String command) {
     String remaining = command.substring("create event ".length());
     String subject = extractQuotedSubject(remaining);
@@ -127,6 +150,12 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Pulls the subject name from the input string.
+   *
+   * @param input the input after "create event"
+   * @return the quoted subject, including quotes
+   */
   private String extractQuotedSubject(String input) {
     if (input.startsWith("\"")) {
       int endQuote = input.indexOf("\"", 1);
@@ -144,6 +173,14 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Creates a recurring all-day event for multiple days.
+   *
+   * @param subject     the event’s name
+   * @param start       when it starts
+   * @param end         when it ends
+   * @param commandPart part of the command like "MWF for 3"
+   */
   private void handleRecurringAllDayEvent(String subject, LocalDateTime start, LocalDateTime end, String commandPart) {
     String[] repeatParts = commandPart.trim().split(" ");
 
@@ -164,6 +201,9 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Helper that creates recurring events for a certain number of times.
+   */
   private void handleRecurringEventSeriesHelper(String subject, LocalDateTime start, LocalDateTime end, String[] repeatParts, Set<DayOfWeek> days) {
     LocalDate untilDate = LocalDate.parse(repeatParts[2], DateTimeFormatter.ISO_DATE);
     EventSeries series = new EventSeries(subject, start, end, days, untilDate);
@@ -173,6 +213,9 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Helper that creates recurring events that go until a specific date.
+   */
   private void handleRecurringEventHelper(String subject, LocalDateTime start, LocalDateTime end, String[] repeatParts, Set<DayOfWeek> days) {
     int count = Integer.parseInt(repeatParts[2]);
     EventSeries series = new EventSeries(subject, start, end, days, count);
@@ -182,6 +225,9 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Handles recurring timed events.
+   */
   private void handleRecurringTimedEvent(String subject, LocalDateTime start, LocalDateTime end, String commandPart) {
     String[] repeatParts = commandPart.trim().split(" ");
 
@@ -204,6 +250,12 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Converts weekday letters M = Monday into actual DayOfWeek values.
+   *
+   * @param weekdayStr the string with weekday letters
+   * @return a set of days of the week
+   */
   private Set<DayOfWeek> parseWeekdays(String weekdayStr) {
     Set<DayOfWeek> days = new HashSet<>();
     for (char c : weekdayStr.toCharArray()) {
@@ -236,6 +288,11 @@ public class CalendarController {
     return days;
   }
 
+  /**
+   * Shows events on a certain day or between two times.
+   *
+   * @param command the user's "print events" command
+   */
   private void handlePrintEvents(String command) {
     if (command.contains(" on ")) {
       String dateStr = command.substring(command.indexOf(" on ") + 4).trim();
@@ -260,6 +317,11 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Checks if you are busy or free at a specific time.
+   *
+   * @param command the user's "show status" command
+   */
   private void handleShowStatus(String command) {
     String dateTimeStr = command.substring(command.indexOf(" on ") + 4).trim();
     LocalDateTime dateTime = parseDateTime(dateTimeStr);
@@ -271,6 +333,9 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Parses a date or date/time string into a LocalDateTime object.
+   */
   private LocalDateTime parseDateTime(String dateTimeStr) {
     if (dateTimeStr.contains("T")) {
       return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -279,6 +344,11 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Handles edit commands like editing a single event, future events, or an entire series.
+   *
+   * @param command the user's edit command
+   */
   private void handleEditEvent(String command) {
     String[] parts = command.split(" ");
     if (parts.length < 2) {
@@ -297,8 +367,7 @@ public class CalendarController {
       throw new IllegalArgumentException("Missing 'to' for single event edit");
     }
 
-    String startStr = remaining.substring(remaining.indexOf("from ") + 5,
-            hasEnd ? remaining.indexOf(" to ") : remaining.indexOf(" with ")).trim();
+    String startStr = remaining.substring(remaining.indexOf("from ") + 5, hasEnd ? remaining.indexOf(" to ") : remaining.indexOf(" with ")).trim();
     LocalDateTime startTime = parseDateTime(startStr);
 
     LocalDateTime endTime = null;
@@ -346,6 +415,9 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Edits a single event.
+   */
   private void editSingleEvent(IEvent event, String property, String newValue) {
     Event modified = createModifiedEvent(event, property, newValue);
     model.removeEvent(event);
@@ -353,6 +425,9 @@ public class CalendarController {
     System.out.println("Edited single event");
   }
 
+  /**
+   * Edits all future events in a recurring series.
+   */
   private void editFutureEvents(IEvent event, String property, String newValue) {
     if (!event.isEvent()) {
       throw new IllegalArgumentException("Can only edit Event instances");
@@ -379,6 +454,9 @@ public class CalendarController {
     System.out.println("Modified " + count + " future events in series");
   }
 
+  /**
+   * Edits all events in a recurring series.
+   */
   private void editWholeSeries(IEvent event, String property, String newValue) {
     if (!event.isEvent()) {
       throw new IllegalArgumentException("Can only edit Event instances");
@@ -400,6 +478,14 @@ public class CalendarController {
     System.out.println("Modified " + count + " events in entire series");
   }
 
+  /**
+   * Makes a new Event like the original but with one changed property.
+   *
+   * @param original the original event
+   * @param property what to change (like "location")
+   * @param newValue the new value to use
+   * @return a new Event with the updated value
+   */
   private Event createModifiedEvent(IEvent original, String property, String newValue) {
     String subject = original.getSubject();
     LocalDateTime start = original.getStart();
