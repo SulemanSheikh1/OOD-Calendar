@@ -13,7 +13,7 @@ public class CalendarAppTest {
 
   @Test
   public void testGenerateByCountMWF3Occ() {
-    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0); // Monday
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
     LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
     Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
 
@@ -24,7 +24,13 @@ public class CalendarAppTest {
     assertEquals("2025-06-02T09:00", events.get(0).getStart().toString());
     assertEquals("2025-06-04T09:00", events.get(1).getStart().toString());
     assertEquals("2025-06-06T09:00", events.get(2).getStart().toString());
+    assertEquals("Math Class", events.get(0).getSubject());
+    assertEquals("Math Class", events.get(1).getSubject());
+    assertEquals("Math Class", events.get(2).getSubject());
   }
 
+  @Test
+  public void testGenerateByCountMWF3Occ2() {
 
+  }
 }
