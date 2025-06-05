@@ -1,5 +1,8 @@
 package calendar;
 
+/**
+ * Class tha represents a single event.
+ */
 public class SingleEvent {
   private Event event;
 

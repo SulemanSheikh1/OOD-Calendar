@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
+/**
+ * Calendar app that represents a calendar and has all the functions a calendar has.
+ * You can add events, and edit.
+ */
 public class CalendarApp {
   private final CalendarModel model;
   private final CalendarView view;

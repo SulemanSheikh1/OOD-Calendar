@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+/**
+ * Class that represents the controller for the calendar.
+ */
 public class CalendarController {
   private final CalendarModel model;
   private final CalendarView view;
