@@ -64,6 +64,10 @@ public class EventSeries {
     generateByDate();
   }
 
+  /**
+   * Helper for constructor, which generates a series of events,
+   * that repeat on specific days of the week up to the specified count.
+   */
   private void generateByCount() {
     LocalDate currDate = start.toLocalDate();
     int counter = 0;
@@ -79,6 +83,10 @@ public class EventSeries {
     }
   }
 
+  /**
+   * Helper for constructor, which generates a series of events,
+   * that repeat on specific days of the week up to the specified date.
+   */
   private void generateByDate() {
     LocalDate currDate = start.toLocalDate();
 
