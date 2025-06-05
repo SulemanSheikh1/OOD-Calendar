@@ -11,6 +11,30 @@ import static org.junit.Assert.assertEquals;
 
 public class CalendarAppTest {
 
+  /*
+  @Test
+  public void testEmptyDays() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
+    Set<DayOfWeek> days = Set.of();
+
+    EventSeries series = new EventSeries("Empty", start, end, days, 3);
+
+    assertEquals(0, series.getEvents().size());
+  }
+   */
+
+  @Test
+  public void testCountZeroEvents() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
+
+    EventSeries series = new EventSeries("Zero Events", start, end, days, 0);
+
+    assertEquals(0, series.getEvents().size());
+  }
+
   @Test
   public void testGenerateByCountMWF3Occ() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
