@@ -24,13 +24,29 @@ public class CalendarAppTest {
     assertEquals("2025-06-02T09:00", events.get(0).getStart().toString());
     assertEquals("2025-06-04T09:00", events.get(1).getStart().toString());
     assertEquals("2025-06-06T09:00", events.get(2).getStart().toString());
+    assertEquals("2025-06-02T10:00", events.get(0).getEnd().toString());
+    assertEquals("2025-06-04T10:00", events.get(1).getEnd().toString());
+    assertEquals("2025-06-06T10:00", events.get(2).getEnd().toString());
     assertEquals("Math Class", events.get(0).getSubject());
     assertEquals("Math Class", events.get(1).getSubject());
     assertEquals("Math Class", events.get(2).getSubject());
   }
 
   @Test
-  public void testGenerateByCountMWF3Occ2() {
+  public void testGenerateByCountMWF2Occ() {
+    LocalDateTime start = LocalDateTime.of(2025, 6, 3, 13, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 6, 3, 14, 0);
+    Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY);
 
+    EventSeries series = new EventSeries("Beach Time", start, end, days, 2);
+    List<Event> events = series.getEvents();
+
+    assertEquals(2, events.size());
+    assertEquals("2025-06-03T13:00", events.get(0).getStart().toString());
+    assertEquals("2025-06-05T13:00", events.get(1).getStart().toString());
+    assertEquals("2025-06-03T14:00", events.get(0).getEnd().toString());
+    assertEquals("2025-06-05T14:00", events.get(1).getEnd().toString());
+    assertEquals("Beach Time", events.get(0).getSubject());
+    assertEquals("Beach Time", events.get(1).getSubject());
   }
 }
