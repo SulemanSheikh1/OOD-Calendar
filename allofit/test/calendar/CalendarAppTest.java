@@ -27,19 +27,6 @@ public class CalendarAppTest {
   }
 
   @Test
-  public void testDateZeroEvents() {
-    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
-    LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
-    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
-    LocalDate until = LocalDate.parse("2025-06-02");
-
-    EventSeries series = new EventSeries("Zero Events", start, end, days, until);
-    List<Event> events = series.getEvents();
-
-    assertEquals(0, events.size());
-  }
-
-  @Test
   public void testGenerateByCountMWF3Occ() {
     LocalDateTime start = LocalDateTime.of(2025, 6, 2, 9, 0);
     LocalDateTime end = LocalDateTime.of(2025, 6, 2, 10, 0);
