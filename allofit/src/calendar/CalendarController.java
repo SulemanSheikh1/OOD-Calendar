@@ -29,10 +29,10 @@ public class CalendarController {
   }
 
   /**
-   * Public entry‐point used by tests (and by headless mode, if you choose).
-   * It delegates to handleCommand(...) but only catches exceptions
+   * Public entry‐point used by tests
+   * It delegates to handleCommand but only catches exceptions
    * from truly unknown commands.  All other IllegalArgumentExceptions
-   * are re‐thrown.
+   * are rethrown.
    *
    * @param command the raw command line from the user or test
    */
@@ -40,11 +40,9 @@ public class CalendarController {
     try {
       handleCommand(command);
     } catch (IllegalArgumentException e) {
-      // Only swallow the exception if it's an "Unrecognized command" from handleCommand.
       if (e.getMessage() != null && e.getMessage().startsWith("Unrecognized command:")) {
         System.out.println("Unknown command: " + command);
       } else {
-        // Anything else (e.g. duplicate‐event) should propagate.
         throw e;
       }
     }
@@ -64,9 +62,9 @@ public class CalendarController {
         break;
       }
       try {
-        handleCommand(line);
-      } catch (Exception e) {
-        System.out.println("Error: " + e.getMessage());
+        processCommand(line);
+      } catch (IllegalArgumentException e) {
+        // should never run
       }
     }
     sc.close();
@@ -189,7 +187,6 @@ public class CalendarController {
       handleRecurringTimedEvent(subject, start, end, endParts[1]);
     } else {
       Event event = new Event(subject, start, end);
-      // Check for duplicate before adding
       if (model.hasConflict(event)) {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
@@ -220,7 +217,6 @@ public class CalendarController {
       throw new IllegalArgumentException("Invalid recurring event format. Expected: <weekdays> for/until <value>");
     }
 
-    // Only take the first token, and force it to uppercase
     String weekdayStr = repeatParts[0].toUpperCase();
     Set<DayOfWeek> days = parseWeekdays(weekdayStr);
 
@@ -247,46 +243,39 @@ public class CalendarController {
               "Invalid edit command. Expected: <edit|edits|edit series> <property> <subject> from <start> with <newValue>");
     }
 
-    // Determine which edit variant: “edit”, “edits”, or “edit series”
     String editType;
     if (parts[0].equalsIgnoreCase("edits")) {
-      editType = "edits"; // future occurrences
+      editType = "edits";
     } else if (parts[0].equalsIgnoreCase("edit") && parts[1].equalsIgnoreCase("series")) {
-      editType = "edit series"; // entire series
+      editType = "edit series";
     } else if (parts[0].equalsIgnoreCase("edit")) {
-      editType = "edit"; // single occurrence
+      editType = "edit";
     } else {
       throw new IllegalArgumentException("Invalid edit type: " + parts[0]);
     }
 
     int idx;
     if (editType.equals("edits")) {
-      idx = 1; // parts[0] == "edits", so property is at index 1
+      idx = 1;
     } else if (editType.equals("edit series")) {
-      idx = 2; // parts[0]=="edit", parts[1]=="series", so property is at index 2
+      idx = 2;
     } else {
-      // edit single
-      idx = 1; // parts[0]=="edit", so property is at index 1
+      idx = 1;
     }
 
-    // Next token should be property
     String property = parts[idx].toLowerCase();
     if (!property.matches("subject|start|end|location|description|status")) {
       throw new IllegalArgumentException("Invalid property: " + property);
     }
     idx++;
 
-    // Next is event subject (may be quoted if it contains spaces)
     String eventSubject;
     if (parts[idx].startsWith("\"")) {
-      // Find the closing quote
       StringBuilder sbSubject = new StringBuilder();
       String piece = parts[idx];
       if (piece.endsWith("\"") && piece.length() > 1) {
-        // e.g. "MyMeeting"
         sbSubject.append(piece, 1, piece.length() - 1);
       } else {
-        // Multi-word subject
         sbSubject.append(piece.substring(1));
         idx++;
         while (idx < parts.length && !parts[idx].endsWith("\"")) {
@@ -296,25 +285,21 @@ public class CalendarController {
         if (idx >= parts.length) {
           throw new IllegalArgumentException("Missing closing quote for subject.");
         }
-        // Now parts[idx] ends with a quote
         piece = parts[idx];
         sbSubject.append(" ").append(piece, 0, piece.length() - 1);
       }
       eventSubject = sbSubject.toString();
       idx++;
     } else {
-      // Single-word subject
       eventSubject = parts[idx];
       idx++;
     }
 
-    // Next token must be "from"
     if (idx >= parts.length || !parts[idx].equalsIgnoreCase("from")) {
       throw new IllegalArgumentException("Missing 'from' keyword in edit command.");
     }
     idx++;
 
-    // Next token is the start date/time
     if (idx >= parts.length) {
       throw new IllegalArgumentException("Missing start date/time in edit command.");
     }
@@ -326,13 +311,11 @@ public class CalendarController {
     }
     idx++;
 
-    // Next token must be "with"
     if (idx >= parts.length || !parts[idx].equalsIgnoreCase("with")) {
       throw new IllegalArgumentException("Missing 'with' keyword in edit command.");
     }
     idx++;
 
-    // Everything remaining is the newValue
     StringBuilder sbValue = new StringBuilder();
     for (int i = idx; i < parts.length; i++) {
       sbValue.append(parts[i]);
@@ -342,14 +325,12 @@ public class CalendarController {
     }
     String newValue = sbValue.toString();
 
-    // Find the matching event (findEvent always returns an Event instance)
     IEvent matchingEvent = model.findEvent(eventSubject, fromDateTime);
     if (matchingEvent == null) {
       System.out.println("Error: Event not found.");
       return;
     }
 
-    // Dispatch to the appropriate helper
     switch (editType.toLowerCase()) {
       case "edit":
         editSingleEvent(matchingEvent, property, newValue);
@@ -377,7 +358,6 @@ public class CalendarController {
     Event base = (Event) event;
 
     Event modified = createModifiedEvent(base, property, newValue);
-    // Check for any conflict before applying
     if (model.hasConflict(modified)) {
       System.out.println("Error: Cannot edit event due to a scheduling conflict.");
       return;
@@ -397,11 +377,10 @@ public class CalendarController {
    * @param newValue   new value for the property
    */
   private void editFutureEvents(IEvent event, String property, String newValue) {
-    Event base = (Event) event;  // direct cast
+    Event base = (Event) event;
 
-    UUID seriesId = base.getSeriesId();  // uses seriesId
+    UUID seriesId = base.getSeriesId();
     if (seriesId == null) {
-      // Not part of a series → just edit this one
       editSingleEvent(event, property, newValue);
       return;
     }
@@ -411,7 +390,7 @@ public class CalendarController {
     int count = 0;
 
     for (IEvent e : allAfter) {
-      Event ev = (Event) e;  // direct cast
+      Event ev = (Event) e;
       if (ev.getSeriesId() != null
               && ev.getSeriesId().equals(seriesId)
               && !ev.getStart().isBefore(baseStart)) {
@@ -435,9 +414,9 @@ public class CalendarController {
    * @param newValue   new value for the property
    */
   private void editWholeSeries(IEvent event, String property, String newValue) {
-    Event base = (Event) event;  // direct cast
+    Event base = (Event) event;
 
-    UUID seriesId = base.getSeriesId();  // uses seriesId
+    UUID seriesId = base.getSeriesId();
     if (seriesId == null) {
       editSingleEvent(event, property, newValue);
       return;
@@ -447,7 +426,7 @@ public class CalendarController {
     int count = 0;
 
     for (IEvent e : allEvents) {
-      Event ev = (Event) e;  // direct cast
+      Event ev = (Event) e;
       if (ev.getSeriesId() != null && ev.getSeriesId().equals(seriesId)) {
         Event modified = createModifiedEvent(ev, property, newValue);
         if (!model.hasConflict(modified)) {
@@ -471,9 +450,7 @@ public class CalendarController {
    * @throws IllegalArgumentException if property is unrecognized or newValue badly formatted
    */
   private Event createModifiedEvent(Event base, String property, String newValue) {
-    // Copy all fields (six-arg constructor preserves location/description/status)
-    Event copy =
-            new Event(
+    Event copy = new Event(
                     base.getSubject(),
                     base.getStart(),
                     base.getEnd(),
@@ -481,12 +458,10 @@ public class CalendarController {
                     base.getDescription(),
                     base.getStatus());
 
-    // Preserve the seriesId if this event is part of a series
     if (base.getSeriesId() != null) {
       copy.setSeriesId(base.getSeriesId());
     }
 
-    // Now adjust exactly one property
     switch (property.toLowerCase()) {
       case "subject":
         copy.setSubject(newValue);
@@ -540,7 +515,7 @@ public class CalendarController {
       throw new IllegalArgumentException("Missing 'on' in all-day event creation");
     }
 
-    remaining = remaining.substring(3).trim(); // after "on "
+    remaining = remaining.substring(3).trim();
 
     String[] parts = remaining.split(" repeats ", 2);
     String dateStr = parts[0].trim();
@@ -553,7 +528,6 @@ public class CalendarController {
       handleRecurringAllDayEvent(subject, start, end, parts[1]);
     } else {
       Event event = new Event(subject, start, end);
-      // Check for duplicate (subject + same start/end) before adding
       if (model.hasConflict(event)) {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
