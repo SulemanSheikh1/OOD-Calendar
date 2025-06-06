@@ -8,7 +8,7 @@ import java.util.List;
  * This class handles all user outputs in the calendar.
  * It displays welcome messages, help menus, and formatted event details.
  */
-public class CalendarView {
+public class CalendarView implements ICalendarView {
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
           DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 

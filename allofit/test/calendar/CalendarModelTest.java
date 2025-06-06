@@ -13,9 +13,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Unit tests for the CalendarModel class.
+ * This test suite verifies core behaviors of CalendarModel such as event addition,
+ * conflict detection, removal, searching, and querying by date or date range.
+ */
+
 public class CalendarModelTest {
   private CalendarModel model;
-  private Event e1, e2, eDup, eOverlap;
+  private Event e1;
+  private Event e2;
+  private Event eDup;
+  private Event eOverlap;
 
   @Before
   public void setUp() {
@@ -27,11 +36,8 @@ public class CalendarModelTest {
     LocalDateTime start2 = LocalDateTime.of(2025, 6, 11, 14, 0);
     LocalDateTime end2 = LocalDateTime.of(2025, 6, 11, 15, 0);
     e2 = new Event("Review", start2, end2);
-
-    // Duplicate of e1 by subject, start, end
     eDup = new Event("Meeting", start1, end1);
 
-    // Overlapping in time but different subject
     LocalDateTime startO = LocalDateTime.of(2025, 6, 10, 9, 30);
     LocalDateTime endO = LocalDateTime.of(2025, 6, 10, 10, 30);
     eOverlap = new Event("Overlap", startO, endO);
@@ -72,7 +78,6 @@ public class CalendarModelTest {
 
   @Test
   public void testFindEventAmbiguousReturnsNull() {
-    // Two events same subject & start but different end
     LocalDateTime startA = LocalDateTime.of(2025, 6, 12, 9, 0);
     LocalDateTime endA1 = LocalDateTime.of(2025, 6, 12, 10, 0);
     LocalDateTime endA2 = LocalDateTime.of(2025, 6, 12, 11, 0);
@@ -108,22 +113,16 @@ public class CalendarModelTest {
   @Test
   public void testIsBusy() {
     model.addEvent(e1);
-    // Time inside e1
     assertTrue(model.isBusy(LocalDateTime.of(2025, 6, 10, 9, 30)));
-    // Exactly at start
     assertFalse(model.isBusy(LocalDateTime.of(2025, 6, 10, 9, 0)));
-    // Exactly at end
     assertFalse(model.isBusy(LocalDateTime.of(2025, 6, 10, 10, 0)));
-    // Before
     assertFalse(model.isBusy(LocalDateTime.of(2025, 6, 10, 8, 59)));
-    // After
     assertFalse(model.isBusy(LocalDateTime.of(2025, 6, 10, 10, 1)));
   }
 
   @Test
   public void testHasConflictOnlyForExactMatch() {
     model.addEvent(e1);
-    // Overlapping but different subject: hasConflict should be false
     assertFalse(model.hasConflict(eOverlap));
   }
 }

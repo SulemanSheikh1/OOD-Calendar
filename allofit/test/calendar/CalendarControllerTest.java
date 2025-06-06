@@ -4,9 +4,12 @@ import org.junit.Test;
 import org.junit.Before;
 import org.junit.After;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 /**
  * Comprehensive JUnit 4 test suite for the calendar application.
@@ -95,14 +98,11 @@ public class CalendarControllerTest {
 
   @Test
   public void testPrintEventsWithinRange() {
-    // Create timed events on two different dates
     controller.processCommand("create event \"X\" from 2025-06-09T10:00 to 2025-06-09T11:00");
     controller.processCommand("create event \"Y\" from 2025-06-10T12:00 to 2025-06-10T13:00");
     outContent.reset();
-    // Print events from 2025-06-09T00:00 to 2025-06-09T23:59
     controller.processCommand("print events from 2025-06-09T00:00 to 2025-06-09T23:59");
     String output = outContent.toString();
-    // The view prints subjects with quotation marks around them
     assertTrue(output.contains("• \"X\""));
     assertFalse(output.contains("• \"Y\""));
   }
@@ -120,7 +120,6 @@ public class CalendarControllerTest {
     int countOccurrences = printed.split("DailyMeeting", -1).length - 1;
     assertEquals(3, countOccurrences);
   }
-
 
 
   @Test
@@ -151,7 +150,6 @@ public class CalendarControllerTest {
     String printed2 = outContent.toString();
     assertTrue(printed2.contains("• \"Gym\""));
   }
-
 
 
   @Test
@@ -190,5 +188,30 @@ public class CalendarControllerTest {
   @Test(expected = IllegalArgumentException.class)
   public void testCreateRecurringEventMissingForOrUntilThrows() {
     controller.processCommand("create event \"Faulty\" on 2025-06-10 repeats MONDAY,BADDAY");
+  }
+
+  @Test
+  public void testEditNonexistentEventPrintsError() {
+    outContent.reset();
+    controller.processCommand("edit location \"NoSuchEvent\" from 2025-07-06T10:00"
+            + " with \"Room101\"");
+    String output = outContent.toString();
+    assertTrue(output.contains("Error: Event not found."));
+  }
+
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEditMissingFromThrows() {
+    controller.processCommand("edit event subject \"X\" 2025-07-06T10:00 with \"NewVal\"");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEditMissingWithThrows() {
+    controller.processCommand("edit event subject \"X\" from 2025-07-06T10:00");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEditInvalidPropertyThrows() {
+    controller.processCommand("edit event foo \"EventA\" from 2025-07-02T09:00 with \"value\"");
   }
 }

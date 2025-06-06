@@ -63,7 +63,6 @@ public class CalendarModel {
     for (IEvent e : events) {
       if (e.getSubject().equals(subject) && e.getStart().equals(start)) {
         if (found != null) {
-          // More than one match is ambiguous
           return null;
         }
         found = e;
@@ -124,7 +123,7 @@ public class CalendarModel {
   /**
    * Returns true if adding the given Event `e` would conflict with an existing event.
    * We define a “conflict” to be: an existing calendar event that has the same
-   * subject, same start, and same end.  In other words, duplicates are not allowed.
+   * subject, the same start, and the same end.  In other words, duplicates are not allowed.
    *
    * @param e the Event to check
    * @return true if there is already an event equal to `e`; false otherwise
