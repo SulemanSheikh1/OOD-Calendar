@@ -583,7 +583,8 @@ public class CalendarController {
   /**
    * Helper that creates recurring events for a certain number of times.
    */
-  private void handleRecurringEventSeriesHelper(String subject, LocalDateTime start, LocalDateTime end,
+  private void handleRecurringEventSeriesHelper(String subject, LocalDateTime start,
+                                                LocalDateTime end,
                                                 String[] repeatParts, Set<DayOfWeek> days) {
     LocalDate untilDate = LocalDate.parse(repeatParts[2], DateTimeFormatter.ISO_DATE);
     EventSeries series = new EventSeries(subject, start, end, days, untilDate);

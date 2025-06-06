@@ -9,6 +9,14 @@ import java.io.PrintStream;
 
 import static org.junit.Assert.assertTrue;
 
+
+/**
+ * Unit tests for the CalendarView class.
+ * This test class verifies that output methods in CalendarView produce the expected text
+ * on System.out.
+ * It captures console output and checks that welcome messages and help menus contain key phrases.
+ */
+
 public class CalendarViewTest {
 
   private CalendarView view;
@@ -41,7 +49,8 @@ public class CalendarViewTest {
     String output = outContent.toString();
     assertTrue(output.contains("Available Commands:"));
     assertTrue(output.contains("create event <subject> from <start> to <end>"));
-    assertTrue(output.contains("edit event <property> <subject> from <start> to <end> with <newValue>"));
+    assertTrue(output.contains("edit event <property> <subject> from <start> to <end>" +
+            " with <newValue>"));
     assertTrue(output.contains("print events on <date>"));
     assertTrue(output.contains("help - Show this help message"));
     assertTrue(output.contains("exit - Exit the application"));
