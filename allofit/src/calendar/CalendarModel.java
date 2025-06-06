@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 /**
  * The storing and managing of all calendar events.
  */
-public class CalendarModel {
+public class CalendarModel implements ICalendarModel {
   private final List<IEvent> events;
 
   /**
