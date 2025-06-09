@@ -13,6 +13,15 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+
+/**
+ * Unit tests for the EventSeries class.
+ * This test suite verifies that the constructor enforces preconditions (e.g., non-null subject,
+ * valid start/end times, non-empty weekday set, non-negative count) and that both count-based
+ * and until-based series generation produce the expected list of Event instances. Each test
+ * method checks a specific behavior or exception scenario.
+ */
+
 public class EventSeriesTest {
   private LocalDateTime mondayStart;
   private LocalDateTime mondayEnd;
@@ -20,7 +29,7 @@ public class EventSeriesTest {
 
   @Before
   public void setUp() {
-    mondayStart = LocalDateTime.of(2025, 6, 9, 9, 0);   // 2025-06-09 is Monday
+    mondayStart = LocalDateTime.of(2025, 6, 9, 9, 0);
     mondayEnd = LocalDateTime.of(2025, 6, 9, 10, 0);
     weekdays = new HashSet<>();
     weekdays.add(DayOfWeek.MONDAY);
@@ -87,11 +96,9 @@ public class EventSeriesTest {
 
   @Test
   public void testGetEventsMultipleOccurrences() {
-    // Count = 3: should produce events on 09th June, 16th June, 23rd June (Mondays)
     EventSeries seriesThree = new EventSeries("Tri", mondayStart, mondayEnd, weekdays, 3);
     List<Event> list = seriesThree.getEvents();
     assertEquals(3, list.size());
-    // Verify each subsequent Monday
     for (int i = 0; i < 3; i++) {
       Event e = list.get(i);
       LocalDateTime expectedStart = mondayStart.plusWeeks(i);
@@ -103,9 +110,9 @@ public class EventSeriesTest {
 
   @Test
   public void testUntilBasedConstructorGeneratesCorrect() {
-    // Repeat every Monday until 2025-06-23 (inclusive): should produce 09th, 16th, 23rd
     LocalDate untilDate = LocalDate.of(2025, 6, 23);
-    EventSeries series = new EventSeries("UntilTest", mondayStart, mondayEnd, weekdays, untilDate);
+    EventSeries series = new EventSeries("UntilTest", mondayStart,
+            mondayEnd, weekdays, untilDate);
     List<Event> list = series.getEvents();
     assertEquals(3, list.size());
     for (int i = 0; i < 3; i++) {

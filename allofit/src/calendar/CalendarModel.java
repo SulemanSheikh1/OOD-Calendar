@@ -1,14 +1,16 @@
 package calendar;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * The storing and managing of all calendar events.
  */
-public class CalendarModel {
+public class CalendarModel implements ICalendarModel {
   private final List<IEvent> events;
 
   /**
@@ -61,9 +63,9 @@ public class CalendarModel {
   public IEvent findEvent(String subject, LocalDateTime start) {
     IEvent found = null;
     for (IEvent e : events) {
+
       if (e.getSubject().equals(subject) && e.getStart().equals(start)) {
         if (found != null) {
-          // More than one match is ambiguous
           return null;
         }
         found = e;
@@ -124,7 +126,7 @@ public class CalendarModel {
   /**
    * Returns true if adding the given Event `e` would conflict with an existing event.
    * We define a “conflict” to be: an existing calendar event that has the same
-   * subject, same start, and same end.  In other words, duplicates are not allowed.
+   * subject, the same start, and the same end.  In other words, duplicates are not allowed.
    *
    * @param e the Event to check
    * @return true if there is already an event equal to `e`; false otherwise
@@ -136,5 +138,116 @@ public class CalendarModel {
       }
     }
     return false;
+  }
+
+  public Event createModifiedEvent(Event base, String property, String newValue, DateTimeFormatter formatter) {
+    Event copy = new Event(
+            base.getSubject(),
+            base.getStart(),
+            base.getEnd(),
+            base.getLocation(),
+            base.getDescription(),
+            base.getStatus());
+
+    if (base.getSeriesId() != null) {
+      copy.setSeriesId(base.getSeriesId());
+    }
+
+    switch (property.toLowerCase()) {
+      case "subject":
+        copy.setSubject(newValue);
+        break;
+      case "start":
+        LocalDateTime newStart = LocalDateTime.parse(newValue, formatter);
+        copy.setStart(newStart);
+        break;
+      case "end":
+        LocalDateTime newEnd = LocalDateTime.parse(newValue, formatter);
+        copy.setEnd(newEnd);
+        break;
+      case "location":
+        copy.setLocation(newValue);
+        break;
+      case "description":
+        copy.setDescription(newValue);
+        break;
+      case "status":
+        copy.setPublic(newValue.equalsIgnoreCase("public") || newValue.equalsIgnoreCase("true"));
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid property: " + property);
+    }
+
+    return copy;
+  }
+
+  public boolean editSingleEvent(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
+    Event base = (Event) event;
+    Event modified = createModifiedEvent(base, property, newValue, formatter);
+
+    if (hasConflict(modified)) {
+      return false;
+    }
+
+    removeEvent(base);
+    addEvent(modified);
+    return true;
+  }
+
+  public int editFutureEvents(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
+    Event base = (Event) event;
+
+    UUID seriesId = base.getSeriesId();
+    if (seriesId == null) {
+      boolean success = editSingleEvent(event, property, newValue, formatter);
+      return success ? 1 : 0;
+    }
+
+    LocalDateTime baseStart = base.getStart();
+    List<IEvent> allAfter = getEventsWithinDates(baseStart, LocalDateTime.MAX);
+    int count = 0;
+
+    for (IEvent e : allAfter) {
+      Event ev = (Event) e;
+      if (ev.getSeriesId() != null
+              && ev.getSeriesId().equals(seriesId)
+              && !ev.getStart().isBefore(baseStart)) {
+        Event modified = createModifiedEvent(ev, property, newValue, formatter);
+        if (!hasConflict(modified)) {
+          removeEvent(ev);
+          addEvent(modified);
+          count++;
+        }
+      }
+    }
+
+    return count;
+  }
+
+  public int editWholeSeries(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
+    Event base = (Event) event;
+
+    UUID seriesId = base.getSeriesId();
+    if (seriesId == null) {
+      boolean success = editSingleEvent(event, property, newValue, formatter);
+      return success ? 1 : 0;
+    }
+
+    List<IEvent> allEvents = getEventsWithinDates(LocalDateTime.MIN, LocalDateTime.MAX);
+    int count = 0;
+
+    for (IEvent e : allEvents) {
+      Event ev = (Event) e;
+      if (ev.getSeriesId() != null && ev.getSeriesId().equals(seriesId)) {
+        Event modified = createModifiedEvent(ev, property, newValue, formatter);
+        if (!hasConflict(modified)) {
+          removeEvent(ev);
+          addEvent(modified);
+          count++;
+        }
+      }
+    }
+
+    return count;
   }
 }
