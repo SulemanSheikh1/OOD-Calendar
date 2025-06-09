@@ -8,12 +8,12 @@ public class CalendarApp {
   private final CalendarController controller;
 
   /**
-   * Constructs a CalendarApp with a new model, view, and controller.
+   * Constructs a CalendarApp with a new library, view, and controller.
    */
   public CalendarApp() {
-    CalendarModel model = new CalendarModel();
+    CalendarLibrary library = new CalendarLibrary();
     CalendarView view = new CalendarView();
-    controller = new CalendarController(model, view);
+    controller = new CalendarController(library, view);
   }
 
   /**
@@ -23,18 +23,6 @@ public class CalendarApp {
    */
   public static void main(String[] args) {
     CalendarApp app = new CalendarApp();
-
-    if (args.length == 0) {
-      app.controller.startInteractiveMode();
-    }
-
-    if (args.length >= 2 && args[0].equalsIgnoreCase("--mode")) {
-      String mode = args[1].toLowerCase();
-      if (args.length == 0) {
-        app.controller.runInteractive();
-      } else if (mode.equals("interactive")) {
-        app.controller.runInteractive();
-      }
-    }
+    app.controller.runInteractive();
   }
 }

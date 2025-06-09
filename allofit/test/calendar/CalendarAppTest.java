@@ -13,11 +13,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * Testing Calendar Application.
  */
+
 public class CalendarAppTest {
 
   @Test
   public void testValid() {
-    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00"); // Monday
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
     Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY);
 
@@ -181,7 +182,7 @@ public class CalendarAppTest {
 
   @Test
   public void testSkipsToFirstValidDay() {
-    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00"); // Monday
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
     Set<DayOfWeek> days = Set.of(DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
     LocalDate until = LocalDate.parse("2025-06-06");
@@ -190,29 +191,30 @@ public class CalendarAppTest {
     List<Event> events = series.getEvents();
 
     assertEquals(2, events.size());
-    assertEquals("2025-06-04T09:00", events.get(0).getStart().toString()); // Wednesday
-    assertEquals("2025-06-06T09:00", events.get(1).getStart().toString()); // Friday
+    assertEquals("2025-06-04T09:00", events.get(0).getStart().toString());
+    assertEquals("2025-06-06T09:00", events.get(1).getStart().toString());
   }
 
   @Test
   public void testNotMatchingDay() {
-    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00"); // Monday
+    LocalDateTime start = LocalDateTime.parse("2025-06-02T09:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-02T10:00");
-    Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY); // Only Tuesday
-    LocalDate until = LocalDate.parse("2025-06-05"); // Thursday (not included)
+    Set<DayOfWeek> days = Set.of(DayOfWeek.TUESDAY);
+    LocalDate until = LocalDate.parse("2025-06-05");
 
     EventSeries series = new EventSeries("Day off", start, end, days, until);
     List<Event> events = series.getEvents();
 
     assertEquals(1, events.size());
-    assertEquals("2025-06-03T09:00", events.get(0).getStart().toString()); // Only one Tuesday
+    assertEquals("2025-06-03T09:00", events.get(0).getStart().toString());
   }
 
   @Test
   public void testAdjacentWeekdaysShortRange() {
     LocalDateTime start = LocalDateTime.parse("2025-06-03T15:00");
     LocalDateTime end = LocalDateTime.parse("2025-06-03T16:00");
-    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+    Set<DayOfWeek> days = Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+            DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
     LocalDate until = LocalDate.parse("2025-06-06");
 
     EventSeries series = new EventSeries("Work Week", start, end, days, until);

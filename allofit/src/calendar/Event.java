@@ -15,7 +15,7 @@ public class Event implements IEvent {
   private String location;
   private String description;
   private String status;
-  private UUID seriesId;  // <-- New field for recurring-series ID
+  private UUID seriesId;
 
   /**
    * Three-argument constructor (subject, start, end).
@@ -32,7 +32,6 @@ public class Event implements IEvent {
     this.subject = subject;
     this.start = start;
 
-    // If 'end' is null, default to start + 1 hour; else ensure end ≥ start.
     if (end != null) {
       if (end.isBefore(start)) {
         throw new IllegalArgumentException("End date/time cannot be before start date/time");
@@ -97,10 +96,8 @@ public class Event implements IEvent {
       this.status = "private";
     }
 
-    this.seriesId = null;  // default: no series until set explicitly
+    this.seriesId = null;
   }
-
-  // ─── Existing getters (with their original Javadocs) ──────────────────────────
 
   @Override
   public String getSubject() {

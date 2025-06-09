@@ -16,15 +16,15 @@ import java.util.UUID;
  * Class that represents the controller for the calendar.
  */
 public class CalendarController {
-  private final CalendarModel model;
+  private final CalendarLibrary library;
   private final CalendarView view;
   private final Scanner scanner = new Scanner(System.in);
   private boolean running;
   private static final DateTimeFormatter DATE_TIME_FORMAT =
           DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
-  public CalendarController(CalendarModel model, CalendarView view) {
-    this.model = model;
+  public CalendarController(CalendarLibrary library, CalendarView view) {
+    this.library = library;
     this.view = view;
   }
 
@@ -55,6 +55,7 @@ public class CalendarController {
    */
   public void runInteractive() {
     Scanner sc = new Scanner(System.in);
+    view.displayWelcomeMessage();
     while (true) {
       System.out.print("> ");
       String line = sc.nextLine().trim();
@@ -110,6 +111,16 @@ public class CalendarController {
       handlePrintEvents(command);
     } else if (lower.startsWith("show status")) {
       handleShowStatus(command);
+    } else if (lower.startsWith("create calendar ")) {
+      handleCreateCalendar(command);
+    } else if (lower.startsWith("switch calendar ")) {
+      handleSwitchCalendar(command);
+    } else if (lower.startsWith("rename calendar ")) {
+      handleRenameCalendar(command);
+    } else if (lower.startsWith("delete calendar ")) {
+      handleDeleteCalendar(command);
+    } else if (lower.equals("list calendars")) {
+      handleListCalendars();
     } else {
       throw new IllegalArgumentException("Unrecognized command: " + command);
     }
@@ -141,7 +152,7 @@ public class CalendarController {
     if (command.contains(" on ")) {
       String dateStr = command.substring(command.indexOf(" on ") + 4).trim();
       LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
-      List<IEvent> events = model.getEventsOnDate(date);
+      List<IEvent> events = library.getActiveCalendar().getEventsOnDate(date);
       List<Event> eventList = new ArrayList<>();
       for (IEvent event : events) {
         eventList.add((Event) event);
@@ -152,7 +163,7 @@ public class CalendarController {
       String[] parts = range.split(" to ");
       LocalDateTime start = parseDateTime(parts[0].trim());
       LocalDateTime end = parseDateTime(parts[1].trim());
-      List<IEvent> events = model.getEventsWithinDates(start, end);
+      List<IEvent> events = library.getActiveCalendar().getEventsWithinDates(start, end);
       List<Event> eventList = new ArrayList<>();
       for (IEvent event : events) {
         eventList.add((Event) event);
@@ -191,10 +202,10 @@ public class CalendarController {
       handleRecurringTimedEvent(subject, start, end, endParts[1]);
     } else {
       Event event = new Event(subject, start, end);
-      if (model.hasConflict(event)) {
+      if (library.getActiveCalendar().hasConflict(event)) {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
-      model.addEvent(event);
+      library.getActiveCalendar().addEvent(event);
       System.out.println("Created timed event: " + subject);
     }
   }
@@ -207,7 +218,7 @@ public class CalendarController {
   private void handleShowStatus(String command) {
     String dateTimeStr = command.substring(command.indexOf(" on ") + 4).trim();
     LocalDateTime dateTime = parseDateTime(dateTimeStr);
-    boolean isBusy = model.isBusy(dateTime);
+    boolean isBusy = library.getActiveCalendar().isBusy(dateTime);
     if (isBusy) {
       System.out.println("busy");
     } else {
@@ -301,6 +312,7 @@ public class CalendarController {
         sbSubject.append(" ").append(piece, 0, piece.length() - 1);
       }
       eventSubject = sbSubject.toString();
+
       idx++;
     } else {
       eventSubject = parts[idx];
@@ -337,7 +349,7 @@ public class CalendarController {
     }
     String newValue = sbValue.toString();
 
-    IEvent matchingEvent = model.findEvent(eventSubject, fromDateTime);
+    IEvent matchingEvent = library.getActiveCalendar().findEvent(eventSubject, fromDateTime);
     if (matchingEvent == null) {
       System.out.println("Error: Event not found.");
       return;
@@ -345,16 +357,14 @@ public class CalendarController {
 
     switch (editType.toLowerCase()) {
       case "edit":
-        editSingleEvent(matchingEvent, property, newValue);
+        handleEditSingleEvent(matchingEvent, property, newValue);
         break;
       case "edits":
-        editFutureEvents(matchingEvent, property, newValue);
+        handleEditFutureEvents(matchingEvent, property, newValue);
         break;
       case "edit series":
-        editWholeSeries(matchingEvent, property, newValue);
+        handleEditWholeSeries(matchingEvent, property, newValue);
         break;
-      default:
-        throw new IllegalArgumentException("Unrecognized edit type.");
     }
   }
 
@@ -366,18 +376,13 @@ public class CalendarController {
    * @param property   which property to modify (subject, start, etc.)
    * @param newValue   new value for the property
    */
-  private void editSingleEvent(IEvent event, String property, String newValue) {
-    Event base = (Event) event;
-
-    Event modified = createModifiedEvent(base, property, newValue);
-    if (model.hasConflict(modified)) {
+  private void handleEditSingleEvent(IEvent event, String property, String newValue) {
+    boolean success = library.getActiveCalendar().editSingleEvent(event, property, newValue, DATE_TIME_FORMAT);
+    if (success) {
+      System.out.println("Edited single event.");
+    } else {
       System.out.println("Error: Cannot edit event due to a scheduling conflict.");
-      return;
     }
-
-    model.removeEvent(base);
-    model.addEvent(modified);
-    System.out.println("Edited single event.");
   }
 
   /**
@@ -388,32 +393,8 @@ public class CalendarController {
    * @param property   which property to modify
    * @param newValue   new value for the property
    */
-  private void editFutureEvents(IEvent event, String property, String newValue) {
-    Event base = (Event) event;
-
-    UUID seriesId = base.getSeriesId();
-    if (seriesId == null) {
-      editSingleEvent(event, property, newValue);
-      return;
-    }
-
-    LocalDateTime baseStart = base.getStart();
-    List<IEvent> allAfter = model.getEventsWithinDates(baseStart, LocalDateTime.MAX);
-    int count = 0;
-
-    for (IEvent e : allAfter) {
-      Event ev = (Event) e;
-      if (ev.getSeriesId() != null
-              && ev.getSeriesId().equals(seriesId)
-              && !ev.getStart().isBefore(baseStart)) {
-        Event modified = createModifiedEvent(ev, property, newValue);
-        if (!model.hasConflict(modified)) {
-          model.removeEvent(ev);
-          model.addEvent(modified);
-          count++;
-        }
-      }
-    }
+  private void handleEditFutureEvents(IEvent event, String property, String newValue) {
+    int count = library.getActiveCalendar().editFutureEvents(event, property, newValue, DATE_TIME_FORMAT);
     System.out.println("Modified " + count + " future event(s) in the series.");
   }
 
@@ -424,29 +405,8 @@ public class CalendarController {
    * @param property   which property to modify
    * @param newValue   new value for the property
    */
-  private void editWholeSeries(IEvent event, String property, String newValue) {
-    Event base = (Event) event;
-
-    UUID seriesId = base.getSeriesId();
-    if (seriesId == null) {
-      editSingleEvent(event, property, newValue);
-      return;
-    }
-
-    List<IEvent> allEvents = model.getEventsWithinDates(LocalDateTime.MIN, LocalDateTime.MAX);
-    int count = 0;
-
-    for (IEvent e : allEvents) {
-      Event ev = (Event) e;
-      if (ev.getSeriesId() != null && ev.getSeriesId().equals(seriesId)) {
-        Event modified = createModifiedEvent(ev, property, newValue);
-        if (!model.hasConflict(modified)) {
-          model.removeEvent(ev);
-          model.addEvent(modified);
-          count++;
-        }
-      }
-    }
+  private void handleEditWholeSeries(IEvent event, String property, String newValue) {
+    int count = library.getActiveCalendar().editWholeSeries(event, property, newValue, DATE_TIME_FORMAT);
     System.out.println("Modified " + count + " event(s) in the entire series.");
   }
 
@@ -540,10 +500,10 @@ public class CalendarController {
       handleRecurringAllDayEvent(subject, start, end, parts[1]);
     } else {
       Event event = new Event(subject, start, end);
-      if (model.hasConflict(event)) {
+      if (library.getActiveCalendar().hasConflict(event)) {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
-      model.addEvent(event);
+      library.getActiveCalendar().addEvent(event);
       System.out.println("Created all-day event: " + subject);
     }
   }
@@ -584,13 +544,13 @@ public class CalendarController {
    * Helper that creates recurring events for a certain number of times.
    */
   private void handleRecurringEventSeriesHelper(String subject, LocalDateTime start,
-                                                LocalDateTime end, String[] repeatParts,
-                                                Set<DayOfWeek> days) {
+                                                LocalDateTime end,
+                                                String[] repeatParts, Set<DayOfWeek> days) {
     LocalDate untilDate = LocalDate.parse(repeatParts[2], DateTimeFormatter.ISO_DATE);
     EventSeries series = new EventSeries(subject, start, end, days, untilDate);
     List<Event> events = series.getEvents();
     for (Event event : events) {
-      model.addEvent(event);
+      library.getActiveCalendar().addEvent(event);
     }
   }
 
@@ -603,7 +563,7 @@ public class CalendarController {
     EventSeries series = new EventSeries(subject, start, end, days, count);
     List<Event> events = series.getEvents();
     for (Event event : events) {
-      model.addEvent(event);
+      library.getActiveCalendar().addEvent(event);
     }
   }
 
@@ -665,6 +625,81 @@ public class CalendarController {
         return input;
       } else {
         return input.substring(0, space);
+      }
+    }
+  }
+
+  private void handleCreateCalendar(String command) {
+    String rest = command.substring("create calendar ".length()).trim();
+    int space = rest.lastIndexOf(" ");
+    if (space == -1) {
+      throw new IllegalArgumentException("Invalid format. Use: create calendar \"name\" <ZoneId>");
+    }
+
+    String name = rest.substring(0, space).trim();
+    if (name.startsWith("\"") && name.endsWith("\"")) {
+      name = name.substring(1, name.length() - 1);
+    }
+
+    String zoneId = rest.substring(space + 1).trim();
+    library.createCalendar(name, zoneId);
+    System.out.println("Created calendar \"" + name + "\" with timezone " + zoneId);
+  }
+
+  private void handleSwitchCalendar(String command) {
+    String name = command.substring("switch calendar ".length()).trim();
+    if (name.startsWith("\"") && name.endsWith("\"")) {
+      name = name.substring(1, name.length() - 1);
+    }
+
+    library.useCalendar(name);
+    System.out.println("Switched to calendar \"" + name + "\"");
+  }
+
+  private void handleRenameCalendar(String command) {
+    String rest = command.substring("rename calendar ".length()).trim();
+    if (!rest.contains(" to ")) {
+      throw new IllegalArgumentException("Missing 'to' in rename command");
+    }
+
+    String[] parts = rest.split(" to ");
+    String oldName = parts[0].trim();
+    String newName = parts[1].trim();
+
+    if (oldName.startsWith("\"") && oldName.endsWith("\"")) {
+      oldName = oldName.substring(1, oldName.length() - 1);
+    }
+    if (newName.startsWith("\"") && newName.endsWith("\"")) {
+      newName = newName.substring(1, newName.length() - 1);
+    }
+
+    library.editCalendar(oldName, "name", newName);
+    System.out.println("Renamed calendar \"" + oldName + "\" to \"" + newName + "\"");
+  }
+
+  private void handleDeleteCalendar(String command) {
+    String name = command.substring("delete calendar ".length()).trim();
+    if (name.startsWith("\"") && name.endsWith("\"")) {
+      name = name.substring(1, name.length() - 1);
+    }
+
+    library.deleteCalendar(name);
+    System.out.println("Deleted calendar \"" + name + "\"");
+  }
+
+  private void handleListCalendars() {
+    Set<String> names = library.listCalendars();
+    if (names.isEmpty()) {
+      System.out.println("No calendars exist.");
+      return;
+    }
+
+    System.out.println("Calendars:");
+    for (String name : names) {
+      if (name.equals(library.getCurrentCalendarName())) {
+        System.out.println("* " + name + " (active)");
+      } else {
+        System.out.println("  " + name);
       }
     }
   }
