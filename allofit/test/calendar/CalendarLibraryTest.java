@@ -5,7 +5,11 @@ import org.junit.Test;
 
 import java.time.ZoneId;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 
 public class CalendarLibraryTest {
   private CalendarLibrary lib;
@@ -14,17 +18,37 @@ public class CalendarLibraryTest {
    * Sets up a fresh calendar library before each test.
    */
   @Before
-  public void init() {
+  public void setUp() {
     lib = new CalendarLibrary();
   }
+
+  /**
+   * Helper.
+   *
+   * @param name name of the event.
+   * @param zoneId ID for the event.
+   */
+  private void createAndUse(String name, String zoneId) {
+    lib.createCalendar(name, zoneId);
+    lib.useCalendar(name);
+  }
+
+  /**
+   * Helper creating two calendars.
+   */
+  private void createTwoCalendars() {
+    lib.createCalendar("Work", "America/New_York");
+    lib.createCalendar("Home", "America/Los_Angeles");
+  }
+
+  // --- Tests ---
 
   /**
    * Tests creating a calendar and retrieving it.
    */
   @Test
   public void testCreateCalendarAndUseIt() {
-    lib.createCalendar("Work", "America/New_York");
-    lib.useCalendar("Work");
+    createAndUse("Work", "America/New_York");
 
     assertEquals("Work", lib.getCurrentCalendarName());
     assertNotNull(lib.getActiveCalendar());
@@ -36,8 +60,7 @@ public class CalendarLibraryTest {
    */
   @Test
   public void testSwitchCalendars() {
-    lib.createCalendar("Work", "America/New_York");
-    lib.createCalendar("Home", "America/Los_Angeles");
+    createTwoCalendars();
 
     lib.useCalendar("Work");
     assertEquals("Work", lib.getCurrentCalendarName());
@@ -51,8 +74,7 @@ public class CalendarLibraryTest {
    */
   @Test
   public void testRenameCalendar() {
-    lib.createCalendar("School", "America/Chicago");
-    lib.useCalendar("School");
+    createAndUse("School", "America/Chicago");
 
     lib.editCalendar("School", "name", "College");
     assertEquals("College", lib.getCurrentCalendarName());
@@ -76,8 +98,8 @@ public class CalendarLibraryTest {
    */
   @Test
   public void testDeleteCalendar() {
-    lib.createCalendar("Temp", "UTC");
-    lib.useCalendar("Temp");
+    createAndUse("Temp", "UTC");
+
     lib.deleteCalendar("Temp");
 
     assertNull(lib.getCurrentCalendarName());
