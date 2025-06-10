@@ -140,6 +140,17 @@ public class CalendarModel implements ICalendarModel {
     return false;
   }
 
+  /**
+   * Creates a new Event object by copying all fields of `base`, then changing exactly one property.
+   * The returned Event preserves the original seriesId if it was non-null.
+   *
+   * @param base      the existing Event to copy
+   * @param property  which property to change
+   * @param newValue  the new value for that property
+   * @param formatter the DateTimeFormatter used to parse date/time values
+   * @return a brand‐new Event reflecting the single change
+   * @throws IllegalArgumentException if property is unrecognized or newValue is badly formatted
+   */
   public Event createModifiedEvent(Event base, String property, String newValue, DateTimeFormatter formatter) {
     Event copy = new Event(
             base.getSubject(),
@@ -181,6 +192,16 @@ public class CalendarModel implements ICalendarModel {
     return copy;
   }
 
+  /**
+   * Edits a single event by creating a modified copy with one updated property.
+   * If the modified event conflicts with existing events, the change is aborted.
+   *
+   * @param event     the original event to edit
+   * @param property  the name of the property to modify
+   * @param newValue  the new value to assign to the property
+   * @param formatter the formatter to parse new date/time values if needed
+   * @return true if the event was successfully edited; false if there was a conflict
+   */
   public boolean editSingleEvent(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
     Event base = (Event) event;
     Event modified = createModifiedEvent(base, property, newValue, formatter);
@@ -194,6 +215,18 @@ public class CalendarModel implements ICalendarModel {
     return true;
   }
 
+  /**
+   * Edits all future events in the same recurring series as the given event,
+   * starting from the given event's start time.
+   * If the event is not part of a series, edits only that one event.
+   * Skips conflicting events and does not modify them.
+   *
+   * @param event     the base event to edit from
+   * @param property  the property to change
+   * @param newValue  the new value for the property
+   * @param formatter the formatter to parse date/time values
+   * @return the number of events successfully modified
+   */
   public int editFutureEvents(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
     Event base = (Event) event;
 
@@ -224,6 +257,17 @@ public class CalendarModel implements ICalendarModel {
     return count;
   }
 
+  /**
+   * Edits all events in the recurring series to which the given event belongs.
+   * If the event is not part of a series, edits only that one event.
+   * Skips conflicting events and does not modify them.
+   *
+   * @param event     the base event in the series
+   * @param property  the property to change
+   * @param newValue  the new value for that property
+   * @param formatter the formatter to parse date/time values
+   * @return the number of events successfully modified
+   */
   public int editWholeSeries(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
     Event base = (Event) event;
 

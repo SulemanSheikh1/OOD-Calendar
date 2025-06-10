@@ -629,6 +629,14 @@ public class CalendarController {
     }
   }
 
+  /**
+   * Handles the "create calendar" command.
+   * Extracts the calendar name and timezone from the command string,
+   * creates a new calendar in the library, and sets its timezone.
+   *
+   * @param command the full user command string
+   * @throws IllegalArgumentException if the command format is invalid
+   */
   private void handleCreateCalendar(String command) {
     String rest = command.substring("create calendar ".length()).trim();
     int space = rest.lastIndexOf(" ");
@@ -646,6 +654,12 @@ public class CalendarController {
     System.out.println("Created calendar \"" + name + "\" with timezone " + zoneId);
   }
 
+  /**
+   * Handles the "switch calendar" command.
+   * Extracts the calendar name and sets it as the active calendar.
+   *
+   * @param command the full user command string
+   */
   private void handleSwitchCalendar(String command) {
     String name = command.substring("switch calendar ".length()).trim();
     if (name.startsWith("\"") && name.endsWith("\"")) {
@@ -656,6 +670,13 @@ public class CalendarController {
     System.out.println("Switched to calendar \"" + name + "\"");
   }
 
+  /**
+   * Handles the "rename calendar" command.
+   * Parses the old and new calendar names and updates the calendar's name.
+   *
+   * @param command the full user command string
+   * @throws IllegalArgumentException if the command does not contain "to"
+   */
   private void handleRenameCalendar(String command) {
     String rest = command.substring("rename calendar ".length()).trim();
     if (!rest.contains(" to ")) {
@@ -677,6 +698,12 @@ public class CalendarController {
     System.out.println("Renamed calendar \"" + oldName + "\" to \"" + newName + "\"");
   }
 
+  /**
+   * Handles the "delete calendar" command.
+   * Extracts the calendar name and removes it from the library.
+   *
+   * @param command the full user command string
+   */
   private void handleDeleteCalendar(String command) {
     String name = command.substring("delete calendar ".length()).trim();
     if (name.startsWith("\"") && name.endsWith("\"")) {
@@ -687,6 +714,11 @@ public class CalendarController {
     System.out.println("Deleted calendar \"" + name + "\"");
   }
 
+  /**
+   * Displays all existing calendar names.
+   * Marks the currently active calendar with an asterisk.
+   * If no calendars exist, prints a message.
+   */
   private void handleListCalendars() {
     Set<String> names = library.listCalendars();
     if (names.isEmpty()) {
