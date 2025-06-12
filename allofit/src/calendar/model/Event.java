@@ -1,4 +1,4 @@
-package calendar;
+package calendar.model;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -303,6 +303,23 @@ public class Event implements IEvent {
             && start.equals(that.start)
             && end.equals(that.end);
   }
+
+  @Override
+  public IEvent copyWithNewTime(LocalDateTime newStart) {
+    // Preserve duration
+    long minutes = java.time.Duration.between(this.start, this.end).toMinutes();
+    LocalDateTime newEnd = newStart.plusMinutes(minutes);
+
+    Event copy = new Event(this.subject, newStart, newEnd,
+            this.location, this.description, this.status);
+
+    if (this.seriesId != null) {
+      copy.setSeriesId(this.seriesId);  // preserve recurrence linkage
+    }
+
+    return copy;
+  }
+
 
   /**
    * Returns a hash code for this event.

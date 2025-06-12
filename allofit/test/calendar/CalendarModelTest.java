@@ -5,8 +5,11 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import calendar.model.CalendarModel;
+import calendar.model.Event;
+import calendar.model.IEvent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -1,4 +1,4 @@
-package calendar;
+package calendar.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -130,4 +130,6 @@ public interface IEvent {
    * @return true if both events have same subject, start, and end
    */
   boolean isSame(Event event);
+
+  IEvent copyWithNewTime(LocalDateTime newStart);
 }

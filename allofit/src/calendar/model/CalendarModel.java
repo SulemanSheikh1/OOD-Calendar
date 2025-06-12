@@ -1,4 +1,4 @@
-package calendar;
+package calendar.model;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;

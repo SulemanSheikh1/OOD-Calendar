@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="OOD-Calendar:jar">
+    <output-path>$PROJECT_DIR$/../artifacts/OOD_Calendar_jar</output-path>
+    <root id="archive" name="OOD-Calendar.jar">
+      <element id="module-output" name="OOD-Calendar" />
+      <element id="module-output" name="src" />
+    </root>
+  </artifact>
+</component>

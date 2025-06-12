@@ -1,5 +1,7 @@
-package calendar;
+package calendar.controller;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,12 +12,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.UUID;
+
+import calendar.model.CalendarLibrary;
+import calendar.view.CalendarView;
+import calendar.model.Event;
+import calendar.model.EventSeries;
+import calendar.model.IEvent;
 
 /**
  * Class that represents the controller for the calendar.
  */
-public class CalendarController {
+public class CalendarController implements ICalendarController {
   private final CalendarLibrary library;
   private final CalendarView view;
   private final Scanner scanner = new Scanner(System.in);
@@ -49,7 +56,6 @@ public class CalendarController {
   }
 
 
-
   /**
    * Runs the calendar in interactive mode, reading commands from stdin.
    */
@@ -75,22 +81,38 @@ public class CalendarController {
    * Starts the interactive mode for user input in a loop.
    * Displays the welcome message and waits for user commands.
    */
-  public void startInteractiveMode() {
-    view.displayWelcomeMessage();
-    while (running) {
-      System.out.print("\n> ");
-      String command = scanner.nextLine().trim();
-      if (command.equalsIgnoreCase("exit")) {
-        running = false;
-        continue;
+  @Override
+  public void runHeadless(String filePath) {
+    try (Scanner scanner = new Scanner(new File(filePath))) {
+      boolean exitFound = false;
+
+      while (scanner.hasNextLine()) {
+        String line = scanner.nextLine().trim();
+
+        if (line.isEmpty()) {
+          continue; // skip blank lines
+        }
+
+        if (line.equalsIgnoreCase("exit")) {
+          exitFound = true;
+          break;
+        }
+
+        try {
+          processCommand(line);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+          System.out.println("Error: " + e.getMessage());
+        }
       }
-      if (command.equalsIgnoreCase("help")) {
-        view.displayHelp();
-        continue;
+
+      if (!exitFound) {
+        System.out.println("Error: missing exit command.");
       }
-      processCommand(command);
+    } catch (FileNotFoundException e) {
+      System.out.println("Error: File not found - " + filePath);
     }
   }
+
 
   /**
    * Parses a single line of input and dispatches to create/edit/print/show.
@@ -101,18 +123,17 @@ public class CalendarController {
     if (command.isEmpty()) {
       return;
     }
-
     String lower = command.toLowerCase();
-    if (lower.startsWith("create")) {
+    if (lower.startsWith("create calendar ")) {
+      handleCreateCalendar(command);
+    } else if (lower.startsWith("create")) {
       handleCreateEvent(command);
-    } else if (lower.startsWith("edit ")) {
+    } else if (lower.startsWith("edit ") || lower.startsWith("edits") || lower.startsWith("edit series")) {
       handleEditEvent(command);
     } else if (lower.startsWith("print ")) {
       handlePrintEvents(command);
     } else if (lower.startsWith("show status")) {
       handleShowStatus(command);
-    } else if (lower.startsWith("create calendar ")) {
-      handleCreateCalendar(command);
     } else if (lower.startsWith("switch calendar ")) {
       handleSwitchCalendar(command);
     } else if (lower.startsWith("rename calendar ")) {
@@ -121,6 +142,12 @@ public class CalendarController {
       handleDeleteCalendar(command);
     } else if (lower.equals("list calendars")) {
       handleListCalendars();
+    } else if (lower.startsWith("copy event ")) {
+      handleCopySingleEvent(command);
+    } else if (lower.startsWith("copy events on ")) {
+      handleCopyEventsOnDate(command);
+    } else if (lower.startsWith("copy events between ")) {
+      handleCopyEventsBetweenDates(command);
     } else {
       throw new IllegalArgumentException("Unrecognized command: " + command);
     }
@@ -180,8 +207,10 @@ public class CalendarController {
    */
   private void handleCreateTimedEvent(String command) {
     String remaining = command.substring("create event ".length());
-    String subject = extractQuotedSubject(remaining);
-    remaining = remaining.substring(subject.length()).trim();
+    String quoted = extractQuotedSubjectRaw(remaining);
+    String subject = quoted.startsWith("\"") ? quoted.substring(1, quoted.length() - 1) : quoted;
+    remaining = remaining.substring(quoted.length()).trim();
+
 
     if (!remaining.startsWith("from ")) {
       throw new IllegalArgumentException("Missing 'from' in timed event creation");
@@ -209,6 +238,20 @@ public class CalendarController {
       System.out.println("Created timed event: " + subject);
     }
   }
+
+  private String extractQuotedSubjectRaw(String input) {
+    if (input.startsWith("\"")) {
+      int endQuote = input.indexOf("\"", 1);
+      if (endQuote == -1) {
+        throw new IllegalArgumentException("Unclosed quote in subject");
+      }
+      return input.substring(0, endQuote + 1);  // include quotes
+    } else {
+      int space = input.indexOf(" ");
+      return space == -1 ? input : input.substring(0, space);
+    }
+  }
+
 
   /**
    * Handles the availability status.
@@ -372,9 +415,9 @@ public class CalendarController {
    * Edits exactly one occurrence (the matchingEvent). If this event is part of a series,
    * other occurrences in that series are unaffected.
    *
-   * @param event      the IEvent to change (actually an Event)
-   * @param property   which property to modify (subject, start, etc.)
-   * @param newValue   new value for the property
+   * @param event    the IEvent to change (actually an Event)
+   * @param property which property to modify (subject, start, etc.)
+   * @param newValue new value for the property
    */
   private void handleEditSingleEvent(IEvent event, String property, String newValue) {
     boolean success = library.getActiveCalendar().editSingleEvent(event, property, newValue, DATE_TIME_FORMAT);
@@ -389,9 +432,9 @@ public class CalendarController {
    * Edits this occurrence and all future occurrences in the same series. If the base
    * event is not part of any series (seriesId == null), behaves exactly like editSingleEvent().
    *
-   * @param event      the IEvent in the series to start from
-   * @param property   which property to modify
-   * @param newValue   new value for the property
+   * @param event    the IEvent in the series to start from
+   * @param property which property to modify
+   * @param newValue new value for the property
    */
   private void handleEditFutureEvents(IEvent event, String property, String newValue) {
     int count = library.getActiveCalendar().editFutureEvents(event, property, newValue, DATE_TIME_FORMAT);
@@ -401,9 +444,9 @@ public class CalendarController {
   /**
    * Edits every occurrence in the same series.
    *
-   * @param event      the IEvent in the series
-   * @param property   which property to modify
-   * @param newValue   new value for the property
+   * @param event    the IEvent in the series
+   * @param property which property to modify
+   * @param newValue new value for the property
    */
   private void handleEditWholeSeries(IEvent event, String property, String newValue) {
     int count = library.getActiveCalendar().editWholeSeries(event, property, newValue, DATE_TIME_FORMAT);
@@ -414,20 +457,20 @@ public class CalendarController {
    * Creates a new Event object by copying all fields of `base`, then changing exactly one property.
    * The returned Event preserves the original seriesId if it was non-null.
    *
-   * @param base      the existing Event to copy
-   * @param property  which property to change (subject, start, end, location, description, status)
-   * @param newValue  the new value for that property (string or date/time text)
+   * @param base     the existing Event to copy
+   * @param property which property to change (subject, start, end, location, description, status)
+   * @param newValue the new value for that property (string or date/time text)
    * @return a brand‐new Event reflecting the single change
    * @throws IllegalArgumentException if property is unrecognized or newValue badly formatted
    */
   private Event createModifiedEvent(Event base, String property, String newValue) {
     Event copy = new Event(
-                    base.getSubject(),
-                    base.getStart(),
-                    base.getEnd(),
-                    base.getLocation(),
-                    base.getDescription(),
-                    base.getStatus());
+            base.getSubject(),
+            base.getStart(),
+            base.getEnd(),
+            base.getLocation(),
+            base.getDescription(),
+            base.getStatus());
 
     if (base.getSeriesId() != null) {
       copy.setSeriesId(base.getSeriesId());
@@ -512,9 +555,9 @@ public class CalendarController {
    * Handles the recurring all-day events based on
    * the given subject, start/end time, and repetition.
    *
-   * @param subject the event subject
-   * @param start the start time of the event
-   * @param end the end time of the event
+   * @param subject     the event subject
+   * @param start       the start time of the event
+   * @param end         the end time of the event
    * @param commandPart the repeat specification string
    */
   private void handleRecurringAllDayEvent(String subject, LocalDateTime start,
@@ -618,7 +661,7 @@ public class CalendarController {
       if (endQuote == -1) {
         throw new IllegalArgumentException("Unclosed quote in subject");
       }
-      return input.substring(0, endQuote + 1);
+      return input.substring(1, endQuote);  // removes quotes
     } else {
       int space = input.indexOf(" ");
       if (space == -1) {
@@ -628,6 +671,9 @@ public class CalendarController {
       }
     }
   }
+
+
+
 
   /**
    * Handles the "create calendar" command.
@@ -733,6 +779,92 @@ public class CalendarController {
       } else {
         System.out.println("  " + name);
       }
+    }
+  }
+
+  // COPY HANDLERS
+
+  private void handleCopySingleEvent(String command) {
+    try {
+      int onIdx = command.indexOf(" on ");
+      int targetIdx = command.indexOf(" --target ");
+      int toIdx = command.indexOf(" to ");
+
+      if (onIdx == -1 || targetIdx == -1 || toIdx == -1) {
+        throw new IllegalArgumentException("Invalid copy event syntax.");
+      }
+
+      String subject = command.substring("copy event ".length(), onIdx).trim();
+      if (subject.startsWith("\"") && subject.endsWith("\"")) {
+        subject = subject.substring(1, subject.length() - 1);
+      }
+
+      String sourceStartStr = command.substring(onIdx + 4, targetIdx).trim();
+      LocalDateTime sourceStart = parseDateTime(sourceStartStr);
+
+      String targetCal = command.substring(targetIdx + 10, toIdx).trim();
+      String destStr = command.substring(toIdx + 4).trim();
+      LocalDateTime dest = parseDateTime(destStr);
+
+      boolean success = library.copyEventToCalendar(subject, sourceStart, targetCal, dest);
+      if (success) {
+        System.out.println("Event copied successfully.");
+      } else {
+        System.out.println("Error: Event not found or conflict in target calendar.");
+      }
+    } catch (Exception e) {
+      System.out.println("Error: " + e.getMessage());
+    }
+  }
+
+  private void handleCopyEventsOnDate(String command) {
+    try {
+      int onIdx = command.indexOf(" on ");
+      int targetIdx = command.indexOf(" --target ");
+      int toIdx = command.indexOf(" to ");
+
+      if (onIdx == -1 || targetIdx == -1 || toIdx == -1) {
+        throw new IllegalArgumentException("Invalid copy events on syntax.");
+      }
+
+      String srcDateStr = command.substring(onIdx + 4, targetIdx).trim();
+      String targetCal = command.substring(targetIdx + 10, toIdx).trim();
+      String destDateStr = command.substring(toIdx + 4).trim();
+
+      LocalDate srcDate = LocalDate.parse(srcDateStr);
+      LocalDate destDate = LocalDate.parse(destDateStr);
+
+      int count = library.copyEventsOnDateToCalendar(srcDate, targetCal, destDate);
+      System.out.println("Copied " + count + " event(s).");
+    } catch (Exception e) {
+      System.out.println("Error: " + e.getMessage());
+    }
+  }
+
+  private void handleCopyEventsBetweenDates(String command) {
+    try {
+      int betweenIdx = command.indexOf(" between ");
+      int andIdx = command.indexOf(" and ");
+      int targetIdx = command.indexOf(" --target ");
+      int toIdx = command.indexOf(" to ");
+
+      if (betweenIdx == -1 || andIdx == -1 || targetIdx == -1 || toIdx == -1) {
+        throw new IllegalArgumentException("Invalid copy events between syntax.");
+      }
+
+      String startStr = command.substring(betweenIdx + 9, andIdx).trim();
+      String endStr = command.substring(andIdx + 5, targetIdx).trim();
+      String targetCal = command.substring(targetIdx + 10, toIdx).trim();
+      String destStartStr = command.substring(toIdx + 4).trim();
+
+      LocalDateTime start = parseDateTime(startStr);
+      LocalDateTime end = parseDateTime(endStr);
+      LocalDateTime destStart = parseDateTime(destStartStr);
+
+      int count = library.copyEventsBetweenDatesToCalendar(start, end, targetCal, destStart);
+      System.out.println("Copied " + count + " event(s).");
+    } catch (Exception e) {
+      System.out.println("Error: " + e.getMessage());
     }
   }
 }

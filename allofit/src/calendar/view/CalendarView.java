@@ -1,8 +1,11 @@
-package calendar;
+package calendar.view;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import calendar.model.Event;
+import calendar.model.IEvent;
 
 /**
  * This class handles all user outputs in the calendar.

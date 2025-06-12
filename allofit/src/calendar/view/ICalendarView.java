@@ -1,7 +1,9 @@
-package calendar;
+package calendar.view;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import calendar.model.Event;
 
 /**
  * This interface handles all user outputs in the calendar.

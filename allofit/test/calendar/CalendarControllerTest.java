@@ -11,6 +11,10 @@ import static org.junit.Assert.assertFalse;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import calendar.controller.CalendarController;
+import calendar.model.CalendarLibrary;
+import calendar.view.CalendarView;
+
 /**
  * Comprehensive JUnit 4 test suite for the calendar application.
  */
