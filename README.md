@@ -100,7 +100,7 @@ Run headless mode with a command script:
 4. Notes for Graders
 
 * `weekday` codes are parsed using `Set<DayOfWeek>` with single-letter format: M, T, W, R, F, S, U
-* Timezone format uses standard IANA strings: `America/New_York`, `Europe/London`, etc.
+* Timezone format uses strings like: `America/New_York`, `Europe/London`, etc.
 * All-day events default to 08:00–17:00 in the calendar’s timezone
 * Timezone conversion occurs during event copy (via `ZonedDateTime.withZoneSameInstant`)
 * Edge cases (missing keywords, duplicate calendars, invalid dates) handled gracefully
