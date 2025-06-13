@@ -310,7 +310,8 @@ public class CalendarLibraryTest {
 
     // Copy events between 7/1 and 7/2 to 7/10
     List<IEvent> toCopy = library.getActiveCalendar()
-            .getEventsWithinDates(LocalDateTime.of(2025, 7, 1, 0, 0), LocalDateTime.of(2025, 7, 2, 23, 59));
+            .getEventsWithinDates(LocalDateTime.of(2025, 7, 1, 0,
+                    0), LocalDateTime.of(2025, 7, 2, 23, 59));
     List<Event> copied = new ArrayList<>();
     for (IEvent e : toCopy) {
       LocalDateTime shifted = e.getStart().plusDays(9); // shift to July 10-11
