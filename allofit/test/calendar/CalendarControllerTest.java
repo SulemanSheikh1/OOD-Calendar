@@ -226,7 +226,6 @@ public class CalendarControllerTest {
   }
 
 
-
   @Test
   public void testRecurringAllDayEventCountBased() {
     controller.processCommand("create event \"Gym\" on 2025-06-09 repeats MW for 2");
@@ -308,8 +307,8 @@ public class CalendarControllerTest {
 
   @Test
   public void testPrintEventFormatMatchesBulletAndTimeRange() {
-    controller.processCommand
-            ("create event \"Planning\" from 2025-07-01T13:00 to 2025-07-01T14:30");
+    controller.processCommand("create event \"Planning\" from "
+            + "2025-07-01T13:00 to 2025-07-01T14:30");
     outContent.reset();
     controller.processCommand("print events on 2025-07-01");
     String output = outContent.toString();
@@ -321,8 +320,8 @@ public class CalendarControllerTest {
 
   @Test
   public void testControllerInputIsSentToModel() {
-    controller.processCommand
-            ("create event \"Design Review\" from 2025-07-02T14:00 to 2025-07-02T15:00");
+    controller.processCommand("create event \"Design Review\" from "
+            + "2025-07-02T14:00 to 2025-07-02T15:00");
     outContent.reset();
     controller.processCommand("print events on 2025-07-02");
     String output = outContent.toString();

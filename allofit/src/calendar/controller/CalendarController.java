@@ -687,8 +687,6 @@ public class CalendarController implements ICalendarController {
   }
 
 
-
-
   /**
    * Handles the "create calendar" command.
    * Extracts the calendar name and timezone from the command string,
@@ -761,8 +759,8 @@ public class CalendarController implements ICalendarController {
   private void handleEditCalendar(String command) {
     String[] parts = command.trim().split(" ");
     if (parts.length < 5) {
-      throw new IllegalArgumentException
-              ("Invalid calendar edit command. Use: edit calendar <name> <property> <newValue>");
+      throw new IllegalArgumentException("Invalid calendar edit command."
+              + " Use: edit calendar <name> <property> <newValue>");
     }
 
     String name = parts[2];

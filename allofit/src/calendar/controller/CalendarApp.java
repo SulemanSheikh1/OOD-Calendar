@@ -33,7 +33,8 @@ public class CalendarApp {
     CalendarApp app = new CalendarApp();
 
     if (args.length < 2 || !args[0].equalsIgnoreCase("--mode")) {
-      System.out.println("Error: Must specify mode as --mode interactive or --mode headless <file>");
+      System.out.println
+              ("Error: Must specify mode as --mode interactive or --mode headless <file>");
       return;
     }
 
