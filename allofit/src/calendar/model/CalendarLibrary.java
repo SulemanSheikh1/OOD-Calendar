@@ -9,8 +9,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Represents a library of calendars, with their own timezone.
- * Allows for creating, selecting, editing, and deleting calendars.
+ * Represents a library of calendars, each associated with a unique name and timezone.
+ * Provides methods for creating, selecting, editing, and deleting calendars, as well as copying
+ * events across calendars.
  */
 public class CalendarLibrary implements ICalendarLibrary {
   private final Map<String, CalendarModel> calendars;
@@ -18,7 +19,7 @@ public class CalendarLibrary implements ICalendarLibrary {
   private String currentCalendar;
 
   /**
-   * Constructs an empty CalendarLibrary.
+   * Constructs an empty CalendarLibrary with no calendars.
    */
   public CalendarLibrary() {
     this.calendars = new HashMap<>();
@@ -27,10 +28,10 @@ public class CalendarLibrary implements ICalendarLibrary {
   }
 
   /**
-   * Creates a new calendar with the name and timezone.
+   * Creates a new calendar with the given name and timezone.
    *
    * @param name the unique name for the calendar
-   * @param timezoneString the timezone ID
+   * @param timezoneString the string ID of the desired timezone
    * @throws IllegalArgumentException if the name already exists or the timezone is invalid
    */
   public void createCalendar(String name, String timezoneString) {
@@ -50,9 +51,9 @@ public class CalendarLibrary implements ICalendarLibrary {
   }
 
   /**
-   * Sets the active calendar by name.
+   * Sets the specified calendar as the active one for subsequent operations.
    *
-   * @param name the name of the calendar to use
+   * @param name the name of the calendar to activate
    * @throws IllegalArgumentException if the calendar does not exist
    */
   public void useCalendar(String name) {
@@ -63,9 +64,9 @@ public class CalendarLibrary implements ICalendarLibrary {
   }
 
   /**
-   * Returns the currently active calendar.
+   * Returns the currently active calendar model.
    *
-   * @return the current CalendarModel
+   * @return the active CalendarModel
    * @throws IllegalStateException if no calendar is currently in use
    */
   public CalendarModel getActiveCalendar() {
@@ -76,9 +77,9 @@ public class CalendarLibrary implements ICalendarLibrary {
   }
 
   /**
-   * Returns the timezone of the active calendar.
+   * Returns the timezone of the currently active calendar.
    *
-   * @return the ZoneId of the current calendar
+   * @return the ZoneId for the active calendar
    * @throws IllegalStateException if no calendar is currently in use
    */
   public ZoneId getActiveTimezone() {
@@ -91,11 +92,11 @@ public class CalendarLibrary implements ICalendarLibrary {
   /**
    * Edits a calendar's name or timezone.
    *
-   * @param name the name of the calendar to edit
+   * @param name the existing calendar name
    * @param property either "name" or "timezone"
-   * @param newValue the new name or timezone ID
+   * @param newValue the new name or timezone string
    * @throws IllegalArgumentException if the calendar doesn't exist,
-   *         the new name already exists, or the timezone is invalid
+   *                                  if the new name already exists, or the timezone is invalid
    */
   public void editCalendar(String name, String property, String newValue) {
     if (!calendars.containsKey(name)) {
@@ -126,7 +127,8 @@ public class CalendarLibrary implements ICalendarLibrary {
   }
 
   /**
-   * Deletes a calendar by name. If it is the active calendar, it is unset.
+   * Deletes a calendar from the library.
+   * If the calendar is currently in use, it is unset.
    *
    * @param name the name of the calendar to delete
    * @throws IllegalArgumentException if the calendar does not exist
@@ -142,7 +144,17 @@ public class CalendarLibrary implements ICalendarLibrary {
     }
   }
 
-  public boolean copyEventToCalendar(String subject, LocalDateTime start, String targetCal, LocalDateTime dest) {
+  /**
+   * Copies a single event to another calendar, adjusting for timezones.
+   *
+   * @param subject the event subject to identify the source event
+   * @param start the start time of the source event
+   * @param targetCal the name of the calendar to copy into
+   * @param dest the new start time in the target calendar's timezone
+   * @return true if successfully copied; false otherwise
+   */
+  public boolean copyEventToCalendar(String subject, LocalDateTime start, String targetCal,
+                                     LocalDateTime dest) {
     if (currentCalendar == null || !calendars.containsKey(targetCal)) {
       return false;
     }
@@ -157,7 +169,8 @@ public class CalendarLibrary implements ICalendarLibrary {
       return false;
     }
 
-    IEvent shifted = original.copyWithNewTime(dest.atZone(targetZone).withZoneSameInstant(sourceZone).toLocalDateTime());
+    IEvent shifted = original.copyWithNewTime(dest.atZone(targetZone)
+            .withZoneSameInstant(sourceZone).toLocalDateTime());
     if (target.hasConflict((Event) shifted)) {
       return false;
     }
@@ -166,6 +179,14 @@ public class CalendarLibrary implements ICalendarLibrary {
     return true;
   }
 
+  /**
+   * Copies all events on a specific date to another calendar.
+   *
+   * @param srcDate the date from which to copy events
+   * @param targetCal the name of the target calendar
+   * @param destDate the date to which events will be copied
+   * @return the number of events successfully copied
+   */
   public int copyEventsOnDateToCalendar(LocalDate srcDate, String targetCal, LocalDate destDate) {
     if (currentCalendar == null || !calendars.containsKey(targetCal)) {
       return 0;
@@ -184,7 +205,8 @@ public class CalendarLibrary implements ICalendarLibrary {
       long minute = e.getStart().getMinute();
       LocalDateTime destStart = destDate.atTime((int) hour, (int) minute);
 
-      IEvent shifted = e.copyWithNewTime(destStart.atZone(sourceZone).withZoneSameInstant(targetZone).toLocalDateTime());
+      IEvent shifted = e.copyWithNewTime(destStart.atZone(sourceZone)
+              .withZoneSameInstant(targetZone).toLocalDateTime());
       if (!target.hasConflict((Event) shifted)) {
         target.addEvent(shifted);
         copied++;
@@ -194,7 +216,17 @@ public class CalendarLibrary implements ICalendarLibrary {
     return copied;
   }
 
-  public int copyEventsBetweenDatesToCalendar(LocalDateTime start, LocalDateTime end, String targetCal, LocalDateTime destStart) {
+  /**
+   * Copies all events within a specified date/time range to another calendar.
+   *
+   * @param start the start datetime of the source range
+   * @param end the end datetime of the source range
+   * @param targetCal the name of the target calendar
+   * @param destStart the starting datetime in the target calendar
+   * @return the number of events successfully copied
+   */
+  public int copyEventsBetweenDatesToCalendar(LocalDateTime start, LocalDateTime end,
+                                              String targetCal, LocalDateTime destStart) {
     if (currentCalendar == null || !calendars.containsKey(targetCal)) {
       return 0;
     }
@@ -211,7 +243,8 @@ public class CalendarLibrary implements ICalendarLibrary {
       long shiftMinutes = java.time.Duration.between(start, e.getStart()).toMinutes();
       LocalDateTime shiftedStart = destStart.plusMinutes(shiftMinutes);
 
-      IEvent newEvent = e.copyWithNewTime(shiftedStart.atZone(sourceZone).withZoneSameInstant(targetZone).toLocalDateTime());
+      IEvent newEvent = e.copyWithNewTime(shiftedStart.atZone(sourceZone)
+              .withZoneSameInstant(targetZone).toLocalDateTime());
 
       if (!target.hasConflict((Event) newEvent)) {
         target.addEvent(newEvent);
@@ -222,13 +255,10 @@ public class CalendarLibrary implements ICalendarLibrary {
     return copied;
   }
 
-
-
-
   /**
-   * Returns the set of all calendar names.
+   * Returns the set of all calendar names currently stored.
    *
-   * @return a set of all existing calendar names
+   * @return a set of calendar names
    */
   public Set<String> listCalendars() {
     return calendars.keySet();
@@ -237,7 +267,7 @@ public class CalendarLibrary implements ICalendarLibrary {
   /**
    * Returns the name of the currently active calendar.
    *
-   * @return the name of the current calendar, or null if none is active
+   * @return the name of the active calendar, or null if no calendar is in use
    */
   public String getCurrentCalendarName() {
     return currentCalendar;

@@ -12,7 +12,7 @@ import java.util.Set;
  * Represents a recurring series of events in the calendar.
  * The series is either a repetition count or an end date.
  */
-public class EventSeries {
+public class EventSeries implements IEventSeries {
   private final String subject;
   private final LocalDateTime start;
   private final LocalDateTime end;
@@ -66,8 +66,8 @@ public class EventSeries {
    */
   public EventSeries(String subject, LocalDateTime start, LocalDateTime end,
                      Set<DayOfWeek> weekdays, LocalDate lastDate) {
-    if (subject == null || subject.isEmpty() || start == null || end == null ||
-            weekdays == null || lastDate == null) {
+    if (subject == null || subject.isEmpty() || start == null || end == null
+            || weekdays == null || lastDate == null) {
       throw new IllegalArgumentException("Arguments cant be null/empty.");
     }
     if (weekdays.isEmpty()) {

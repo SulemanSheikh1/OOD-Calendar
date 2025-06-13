@@ -90,7 +90,7 @@ public class CalendarController implements ICalendarController {
         String line = scanner.nextLine().trim();
 
         if (line.isEmpty()) {
-          continue; // skip blank lines
+          continue;
         }
 
         if (line.equalsIgnoreCase("exit")) {
@@ -126,9 +126,12 @@ public class CalendarController implements ICalendarController {
     String lower = command.toLowerCase();
     if (lower.startsWith("create calendar ")) {
       handleCreateCalendar(command);
+    } else if (lower.startsWith("edit calendar ")) {
+      handleEditCalendar(command);
     } else if (lower.startsWith("create")) {
       handleCreateEvent(command);
-    } else if (lower.startsWith("edit ") || lower.startsWith("edits") || lower.startsWith("edit series")) {
+    } else if (lower.startsWith("edit ") || lower.startsWith("edits")
+            || lower.startsWith("edit series")) {
       handleEditEvent(command);
     } else if (lower.startsWith("print ")) {
       handlePrintEvents(command);
@@ -259,13 +262,17 @@ public class CalendarController implements ICalendarController {
    * @param command the full "show status" command with datetime
    */
   private void handleShowStatus(String command) {
-    String dateTimeStr = command.substring(command.indexOf(" on ") + 4).trim();
-    LocalDateTime dateTime = parseDateTime(dateTimeStr);
-    boolean isBusy = library.getActiveCalendar().isBusy(dateTime);
-    if (isBusy) {
-      System.out.println("busy");
-    } else {
-      System.out.println("available");
+    try {
+      String dateTimeStr = command.substring(command.indexOf(" on ") + 4).trim();
+      LocalDateTime dateTime = parseDateTime(dateTimeStr);
+      boolean isBusy = library.getActiveCalendar().isBusy(dateTime);
+      if (isBusy) {
+        System.out.println("busy");
+      } else {
+        System.out.println("available");
+      }
+    } catch (DateTimeParseException e) {
+      System.out.println("Error: Invalid date/time format. Use YYYY-MM-DDThh:mm");
     }
   }
 
@@ -277,8 +284,8 @@ public class CalendarController implements ICalendarController {
     String[] repeatParts = commandPart.trim().split(" ");
 
     if (repeatParts.length < 3) {
-      throw new IllegalArgumentException("Invalid recurring event format. " +
-              "Expected: <weekdays> for/until <value>");
+      throw new IllegalArgumentException("Invalid recurring event format. "
+              + "Expected: <weekdays> for/until <value>");
     }
 
     String weekdayStr = repeatParts[0].toUpperCase();
@@ -291,8 +298,8 @@ public class CalendarController implements ICalendarController {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring timed event series: \"" + subject + "\"");
     } else {
-      throw new IllegalArgumentException("Invalid recurring event specification. " +
-              "Must include 'for' or 'until'.");
+      throw new IllegalArgumentException("Invalid recurring event specification. "
+              + "Must include 'for' or 'until'.");
     }
   }
 
@@ -304,15 +311,16 @@ public class CalendarController implements ICalendarController {
   private void handleEditEvent(String command) {
     String[] parts = command.split(" ");
     if (parts.length < 4) {
-      throw new IllegalArgumentException("Invalid edit command. " +
-              "Expected: <edit|edits|edit series> <property> <subject> " +
-              "from <start> with <newValue>");
+      throw new IllegalArgumentException("Invalid edit command. "
+              + "Expected: <edit|edits|edit series> <property> <subject> "
+              + "from <start> with <newValue>");
     }
 
     String editType;
     if (parts[0].equalsIgnoreCase("edits")) {
       editType = "edits";
-    } else if (parts[0].equalsIgnoreCase("edit") && parts[1].equalsIgnoreCase("series")) {
+    } else if (parts[0].equalsIgnoreCase("edit") && parts[1]
+            .equalsIgnoreCase("series")) {
       editType = "edit series";
     } else if (parts[0].equalsIgnoreCase("edit")) {
       editType = "edit";
@@ -408,6 +416,8 @@ public class CalendarController implements ICalendarController {
       case "edit series":
         handleEditWholeSeries(matchingEvent, property, newValue);
         break;
+      default:
+        // should never happen
     }
   }
 
@@ -420,7 +430,8 @@ public class CalendarController implements ICalendarController {
    * @param newValue new value for the property
    */
   private void handleEditSingleEvent(IEvent event, String property, String newValue) {
-    boolean success = library.getActiveCalendar().editSingleEvent(event, property, newValue, DATE_TIME_FORMAT);
+    boolean success = library.getActiveCalendar().editSingleEvent(event, property, newValue,
+            DATE_TIME_FORMAT);
     if (success) {
       System.out.println("Edited single event.");
     } else {
@@ -437,7 +448,8 @@ public class CalendarController implements ICalendarController {
    * @param newValue new value for the property
    */
   private void handleEditFutureEvents(IEvent event, String property, String newValue) {
-    int count = library.getActiveCalendar().editFutureEvents(event, property, newValue, DATE_TIME_FORMAT);
+    int count = library.getActiveCalendar().editFutureEvents(event, property, newValue,
+            DATE_TIME_FORMAT);
     System.out.println("Modified " + count + " future event(s) in the series.");
   }
 
@@ -449,7 +461,8 @@ public class CalendarController implements ICalendarController {
    * @param newValue new value for the property
    */
   private void handleEditWholeSeries(IEvent event, String property, String newValue) {
-    int count = library.getActiveCalendar().editWholeSeries(event, property, newValue, DATE_TIME_FORMAT);
+    int count = library.getActiveCalendar().editWholeSeries(event, property, newValue,
+            DATE_TIME_FORMAT);
     System.out.println("Modified " + count + " event(s) in the entire series.");
   }
 
@@ -566,8 +579,8 @@ public class CalendarController implements ICalendarController {
     String[] repeatParts = commandPart.trim().split(" ");
 
     if (repeatParts.length < 3) {
-      throw new IllegalArgumentException("Invalid recurring event format. " +
-              "Expected: <weekdays> for/until <value>");
+      throw new IllegalArgumentException("Invalid recurring event format. "
+              + "Expected: <weekdays> for/until <value>");
     }
 
     Set<DayOfWeek> days = parseWeekdays(repeatParts[0].toUpperCase());
@@ -579,8 +592,8 @@ public class CalendarController implements ICalendarController {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
       System.out.println("Created recurring all-day event series: \"" + subject + "\"");
     } else {
-      throw new IllegalArgumentException("Invalid recurring event specification. " +
-              "Must include 'for' or 'until'.");
+      throw new IllegalArgumentException("Invalid recurring event specification. "
+              + "Must include 'for' or 'until'.");
     }
   }
 
@@ -662,7 +675,7 @@ public class CalendarController implements ICalendarController {
       if (endQuote == -1) {
         throw new IllegalArgumentException("Unclosed quote in subject");
       }
-      return input.substring(1, endQuote);  // removes quotes
+      return input.substring(1, endQuote);
     } else {
       int space = input.indexOf(" ");
       if (space == -1) {
@@ -744,6 +757,22 @@ public class CalendarController implements ICalendarController {
     library.editCalendar(oldName, "name", newName);
     System.out.println("Renamed calendar \"" + oldName + "\" to \"" + newName + "\"");
   }
+
+  private void handleEditCalendar(String command) {
+    String[] parts = command.trim().split(" ");
+    if (parts.length < 5) {
+      throw new IllegalArgumentException
+              ("Invalid calendar edit command. Use: edit calendar <name> <property> <newValue>");
+    }
+
+    String name = parts[2];
+    String property = parts[3];
+    String newValue = String.join(" ", java.util.Arrays.copyOfRange(parts, 4, parts.length));
+
+    library.editCalendar(name, property, newValue);
+    System.out.println("Calendar \"" + name + "\" updated: " + property + " = " + newValue);
+  }
+
 
   /**
    * Handles the "delete calendar" command.

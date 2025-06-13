@@ -10,9 +10,17 @@ import static org.junit.Assert.assertFalse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import calendar.controller.CalendarController;
 import calendar.model.CalendarLibrary;
+import calendar.model.Event;
+import calendar.model.IEvent;
 import calendar.view.CalendarView;
 
 /**
@@ -117,9 +125,40 @@ public class CalendarControllerTest {
   }
 
   @Test
+  public void testCopySingleEventAcrossTimezones() {
+    CalendarLibrary library = new CalendarLibrary();
+    library.createCalendar("NY", "America/New_York");
+    library.createCalendar("CA", "America/Los_Angeles");
+
+    library.useCalendar("NY");
+
+    LocalDateTime nyStart = LocalDateTime.of(2025, 7, 1, 13, 0);
+    LocalDateTime nyEnd = LocalDateTime.of(2025, 7, 1, 14, 0);
+    Event event = new Event("Lunch", nyStart, nyEnd);
+    library.getActiveCalendar().addEvent(event);
+
+    ZonedDateTime sourceZoned = nyStart.atZone(ZoneId.of("America/New_York"));
+    ZonedDateTime targetZoned = sourceZoned
+            .withZoneSameInstant(ZoneId.of("America/Los_Angeles"));
+    LocalDateTime caStart = targetZoned.toLocalDateTime();
+
+    Event copied = (Event) event.copyWithNewTime(caStart);
+
+    library.useCalendar("CA");
+    library.getActiveCalendar().addEvent(copied);
+
+    List<IEvent> events = library.getActiveCalendar().getEventsOnDate(caStart.toLocalDate());
+
+    assertEquals(1, events.size());
+    assertEquals("Lunch", events.get(0).getSubject());
+    assertEquals(caStart, events.get(0).getStart());
+  }
+
+
+  @Test
   public void testRecurringTimedEventCountBased() {
-    controller.processCommand("create event \"DailyMeeting\" " +
-            "from 2025-06-10T09:00 to 2025-06-10T10:00 repeats MTWRFSU for 3");
+    controller.processCommand("create event \"DailyMeeting\" "
+            + "from 2025-06-10T09:00 to 2025-06-10T10:00 repeats MTWRFSU for 3");
     String output = outContent.toString().trim();
     assertTrue(output.contains("Created recurring timed event series: \"DailyMeeting\""));
 
@@ -143,6 +182,49 @@ public class CalendarControllerTest {
     int countOccurrences = printed.split("SprintReview", -1).length - 1;
     assertEquals(3, countOccurrences);
   }
+
+  @Test
+  public void testCopyEventsInRangeSameTimezone() {
+    CalendarLibrary library = new CalendarLibrary();
+    library.createCalendar("Source", "America/New_York");
+    library.createCalendar("Target", "America/New_York");
+
+    library.useCalendar("Source");
+    LocalDateTime start1 = LocalDateTime.of(2025, 7, 1, 9, 0);
+    LocalDateTime end1 = LocalDateTime.of(2025, 7, 1, 10, 0);
+    Event e1 = new Event("Morning Sync", start1, end1);
+    library.getActiveCalendar().addEvent(e1);
+
+    LocalDateTime start2 = LocalDateTime.of(2025, 7, 2, 14, 0);
+    LocalDateTime end2 = LocalDateTime.of(2025, 7, 2, 15, 0);
+    Event e2 = new Event("Afternoon Review", start2, end2);
+    library.getActiveCalendar().addEvent(e2);
+
+    List<IEvent> toCopy = library.getActiveCalendar()
+            .getEventsWithinDates(LocalDateTime.of(2025, 7,
+                    1, 0, 0), LocalDateTime.of(2025, 7, 2, 23, 59));
+    List<Event> copied = new ArrayList<>();
+    for (IEvent e : toCopy) {
+      LocalDateTime shifted = e.getStart().plusDays(9);
+      copied.add((Event) e.copyWithNewTime(shifted));
+    }
+
+    library.useCalendar("Target");
+    for (Event e : copied) {
+      library.getActiveCalendar().addEvent(e);
+    }
+
+    List<IEvent> result1 = library.getActiveCalendar()
+            .getEventsOnDate(LocalDate.of(2025, 7, 10));
+    List<IEvent> result2 = library.getActiveCalendar()
+            .getEventsOnDate(LocalDate.of(2025, 7, 11));
+
+    assertEquals(1, result1.size());
+    assertEquals("Morning Sync", result1.get(0).getSubject());
+    assertEquals(1, result2.size());
+    assertEquals("Afternoon Review", result2.get(0).getSubject());
+  }
+
 
 
   @Test
@@ -223,4 +305,66 @@ public class CalendarControllerTest {
   public void testEditInvalidPropertyThrows() {
     controller.processCommand("edit event foo \"EventA\" from 2025-07-02T09:00 with \"value\"");
   }
+
+  @Test
+  public void testPrintEventFormatMatchesBulletAndTimeRange() {
+    controller.processCommand
+            ("create event \"Planning\" from 2025-07-01T13:00 to 2025-07-01T14:30");
+    outContent.reset();
+    controller.processCommand("print events on 2025-07-01");
+    String output = outContent.toString();
+
+    assertTrue(output.contains("• \"Planning\""));
+    assertTrue(output.contains("(2025-07-01 13:00 - 2025-07-01 14:30)"));
+    assertTrue(output.contains("Status: public"));
+  }
+
+  @Test
+  public void testControllerInputIsSentToModel() {
+    controller.processCommand
+            ("create event \"Design Review\" from 2025-07-02T14:00 to 2025-07-02T15:00");
+    outContent.reset();
+    controller.processCommand("print events on 2025-07-02");
+    String output = outContent.toString();
+    assertTrue(output.contains("Design Review"));
+  }
+
+  @Test
+  public void testEventPrintedCorrectlyAfterTimezoneChange() {
+    controller.processCommand("create calendar Work America/New_York");
+    controller.processCommand("switch calendar Work");
+    controller.processCommand("create event \"Meeting\" from 2025-07-01T09:00 to 2025-07-01T10:00");
+    controller.processCommand("edit calendar Work timezone Asia/Tokyo");
+    outContent.reset();
+    controller.processCommand("print events on 2025-07-01");
+    String output = outContent.toString();
+    assertTrue(output.contains("Meeting"));
+    assertTrue(output.contains("2025-07-01 09:00"));
+  }
+
+  @Test
+  public void testCopySingleEventSameTimezone() {
+    CalendarLibrary library = new CalendarLibrary();
+    library.createCalendar("Work", "America/New_York");
+    library.createCalendar("Personal", "America/New_York");
+
+    library.useCalendar("Work");
+
+    LocalDateTime srcStart = LocalDateTime.of(2025, 6, 15, 10, 0);
+    LocalDateTime srcEnd = LocalDateTime.of(2025, 6, 15, 11, 0);
+    Event event = new Event("Meeting", srcStart, srcEnd);
+    library.getActiveCalendar().addEvent(event);
+    LocalDateTime destStart = LocalDateTime.of(2025, 6, 16, 14, 0);
+    Event copied = (Event) event.copyWithNewTime(destStart);
+    library.getActiveCalendar().removeEvent(event);
+    library.useCalendar("Personal");
+    library.getActiveCalendar().addEvent(copied);
+
+    List<IEvent> events = library.getActiveCalendar().getEventsOnDate(destStart.toLocalDate());
+
+    assertEquals(1, events.size());
+    assertEquals("Meeting", events.get(0).getSubject());
+    assertEquals(destStart, events.get(0).getStart());
+  }
+
 }

@@ -51,8 +51,8 @@ public class CalendarViewTest {
     String output = outContent.toString();
     assertTrue(output.contains("Available Commands:"));
     assertTrue(output.contains("create event <subject> from <start> to <end>"));
-    assertTrue(output.contains("edit event <property> <subject> from <start> to <end>" +
-            " with <newValue>"));
+    assertTrue(output.contains("edit event <property> <subject> from <start> to <end>"
+            + " with <newValue>"));
     assertTrue(output.contains("print events on <date>"));
     assertTrue(output.contains("help - Show this help message"));
     assertTrue(output.contains("exit - Exit the application"));

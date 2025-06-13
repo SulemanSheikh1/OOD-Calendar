@@ -1,107 +1,105 @@
-Calendar Application (Assignment 4, Part 1)
+Calendar Application (Assignment 5, Part 2)
 
 1. How to Run
 
-Interactive Mode
+Interactive Mode:
 Run in interactive mode:
 
+```
 --mode interactive
+```
 
-Headless Mode
+Headless Mode:
+Run headless mode with a command script:
 
-### Headless Mode
-Run headless mode:
+```
 --mode headless res/valid_commands.txt
+```
 
-1. Features Implemented
-   Below is a summary of which features were fully implemented.
+2. Features Implemented
 
-Create a Single Calendar Event
+### Multi-Calendar Support
 
-✅ All-day events (create event "Subject" on YYYY-MM-DD)
+✅	Create multiple calendars with unique names and timezones
+✅	Switch between calendars (`switch calendar <name>`)
+✅	Edit calendar name or timezone
+✅	Delete calendars, list existing calendars
 
-✅ Timed events (create event "Subject" from YYYY-MM-DDThh:mm to YYYY-MM-DDThh:mm)
+### Timezone Handling
 
-✅ Auto‐default end time at 5 PM for all-day events.
+✅	Each calendar has its own `ZoneId` timezone
+✅	Times are interpreted in that calendar’s timezone
+✅	Timezone conversion applied during event copying
 
-Create an Event Series
+### Event Creation
 
-✅ Count-based recurring events on specific weekdays for N occurrences.
+✅	All-day events (default 08:00–17:00)
+✅	Timed events with explicit start/end
+✅	Recurring events (count- and until-based), with day-of-week control
+✅	Conflict detection prevents duplicates
 
-✅ Until-based recurring events on specific weekdays (inclusive).
+### Editing Events
 
-✅ All-day series and timed‐series both supported.
+✅	Edit individual events (subject, start, end, location, description, status)
+✅	Edit future events in a series (`edits`)
+✅	Edit entire series (`edit series`)
 
-✅ Prevents duplicates (no two events with the same subject, start, or end).
+### Querying
 
-Edit Calendar Events
+✅	`print events on <date>` → bullet list with details
+✅	`print events from <start> to <end>` → time range query
+✅	`show status on <dateTime>` → busy / available
 
-✅  Rename a single event or a single occurrence in a series.
+### Copying Events Across Calendars
 
-✅ Modify “this and future” within a series.
+✅	`copy event "Subject" on <datetime> --target <calendar> to <datetime>`
+✅	`copy events on <date> --target <calendar> to <date>` (timezone converted)
+✅	`copy events between <start> and <end> --target <calendar> to <datetime>` (shifts relative timing)
+✅	Partial event series are copied with `seriesId` retained
+✅	Conflict detection applied in destination calendar
 
-✅ Modify “all in series” (past & future).
+### Command Syntax & Error Handling
 
-✅ Change subject, start, end, location, description, status.
+✅	Unknown commands report errors
+✅	Invalid formats (e.g., date/time, missing keywords) throw clear errors
+✅	Missing `exit` in headless mode prints a message and quits
+✅	Interactive and headless modes both supported
 
-Query Calendar
+3. Team Contributions
 
-✅ print events on YYYY-MM-DD → lists bullets with subject, times, and location.
+* **Suleman Sheikh (50%)**
 
-✅ print events from YYYY-MM-DDThh:mm to YYYY-MM-DDThh:mm → lists all events in that interval.
+    * Designed and implemented core model classes:
+    * Wrote model logic for editing single/future/series events
+    * Implemented `CalendarView` and `ICalendarView`, `Event`,
+    * `EventSeries`, `IEvent`, `SingleEvent`
+       * Created `CalendarLibrary` for managing multiple calendars and timezones
+       * Implemented `copyEventToCalendar`, `copyEventsOnDateToCalendar`, `copyEventsBetweenDatesToCalendar`
+       * Developed full controller support for event creation, editing, and copy commands
+       * Wrote unit tests:
 
-✅ show status on YYYY-MM-DDThh:mm → “busy” / “available”.
+        * `EventTest.java`, `EventSeriesTest.java`, `CalendarControllerTest.java`
+       * Authored `res/` files:
 
-Command Syntax & Error Handling
+        * `valid_commands.txt`, `invalid_commands.txt`, `no_exit_commands.txt`
 
-✅ Unknown commands (any unrecognized keyword) prints an error.
+* **Brady Cai (50%)**
 
-✅ Invalid date/time formats throw a clear IllegalArgumentException.
+    * Built `CalendarModel` (event storage, query, conflict detection)
+    * Created `CalendarLibrary` for managing multiple calendars and timezones
+    * Implemented `copyEventToCalendar`, `copyEventsOnDateToCalendar`, `copyEventsBetweenDatesToCalendar`
+    * Extended controller parsing for `edit`, `edits`, `edit series`
+    * Created JUnit tests:
 
-✅ Missing exit in headless mode → prints an error & quits.
-
-✅ Both modes (interactive & headless) supported.
-
-## 3. Team Contributions
-
-- **Suleman Sheikh (50%)**
-   - Designed and implemented the core data‐model classes:
-      - `Event` (validation, default end‐time logic, setters/getters)
-      - `EventSeries` (count- and until-based recurrence generation)
-      - `IEvent` and `SingleEvent` (wrapper for single occurrences)
-   - Wrote unit tests for the data model:
-      - `EventTest.java`
-      - `EventSeriesTest.java`
-      - `SingleEventTest.java`
-   - Created all `res/` files:
-     - `valid_commands.txt`
-     - `invalid_commands.txt`
-     - `no_exit_commands.txt`
-   - Implemented part of `CalendarController` (command parsing, interactive/headless orchestration).
-   - Wrote controller tests focusing on “edit” behaviors:
-      - `CalendarControllerEditTest.java`
-
-- **Brady Cai (50%)**
-   - Developed `CalendarModel` (conflict detection, adding/removing events, querying).
-   - Designed and implemented `EventSeries` (count- and until-based recurrence generation)
-   - Implemented part of `CalendarController` (command parsing, interactive/headless orchestration).
-   - Wrote unit tests for `CalendarModel`:
-      - `CalendarModelTest.java`
-      - `CalendarAppTest.java`
-   - Implemented `CalendarView` (console output formatting) and the `CalendarViewInterface`.
-   - Drafted and finalized `README.md` (instructions on how to run, error handling notes).
-
+        * `CalendarModelTest.java`, `CalendarAppTest.java`, `CalendarViewTest.java`
+      * Drafted and finalized `README.md`, documentation, and error examples
 
 4. Notes for Graders
-   
-We chose to represent weekdays as a Set<DayOfWeek> internally.
-String parsing uses single‐letter codes (M, T, W, R, F, S, U).
 
-All‐day events default to 08:00–17:00 EST.
-If the user omits to <time> on a timed event, an IllegalArgumentException is thrown.
-Edge cases (editing a non‐existent event, ambiguous edits) produce a descriptive
-error and do not crash the program.
-In res/invalid_commands.txt, we show examples of commands that fail and their expected
-error messages.
-In res/no_exit_commands.txt, we demonstrate a headless file without an exit → the program
-prints “Error: missing exit” and quits.
+* `weekday` codes are parsed using `Set<DayOfWeek>` with single-letter format: M, T, W, R, F, S, U
+* Timezone format uses standard IANA strings: `America/New_York`, `Europe/London`, etc.
+* All-day events default to 08:00–17:00 in the calendar’s timezone
+* Timezone conversion occurs during event copy (via `ZonedDateTime.withZoneSameInstant`)
+* Edge cases (missing keywords, duplicate calendars, invalid dates) handled gracefully
+* `res/valid_commands.txt` contains a full working script for grading
+* `res/invalid_commands.txt` and `res/no_exit_commands.txt` demonstrate error handling and missing-exit behavior

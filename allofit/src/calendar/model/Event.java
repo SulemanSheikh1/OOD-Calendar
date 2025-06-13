@@ -306,7 +306,6 @@ public class Event implements IEvent {
 
   @Override
   public IEvent copyWithNewTime(LocalDateTime newStart) {
-    // Preserve duration
     long minutes = java.time.Duration.between(this.start, this.end).toMinutes();
     LocalDateTime newEnd = newStart.plusMinutes(minutes);
 
@@ -314,7 +313,7 @@ public class Event implements IEvent {
             this.location, this.description, this.status);
 
     if (this.seriesId != null) {
-      copy.setSeriesId(this.seriesId);  // preserve recurrence linkage
+      copy.setSeriesId(this.seriesId);
     }
 
     return copy;

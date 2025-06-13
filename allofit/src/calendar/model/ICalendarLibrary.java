@@ -63,10 +63,43 @@ public interface ICalendarLibrary {
    */
   void deleteCalendar(String name);
 
-  boolean copyEventToCalendar(String subject, LocalDateTime start, String targetCal, LocalDateTime dest);
-  int copyEventsOnDateToCalendar(LocalDate srcDate, String targetCal, LocalDate destDate);
-  int copyEventsBetweenDatesToCalendar(LocalDateTime start, LocalDateTime end, String targetCal, LocalDateTime destStart);
+  /**
+   * Copies a single event from the active calendar to another calendar,
+   * adjusting for time zone differences.
+   *
+   * @param subject    the subject of the event to copy
+   * @param start      the original start time of the event
+   * @param targetCal  the name of the calendar to copy to
+   * @param dest       the new start time in the target calendar's timezone
+   * @return true if the event was copied successfully; false if not found or conflicts
+   */
+  boolean copyEventToCalendar(String subject, LocalDateTime start, String targetCal,
+                              LocalDateTime dest);
 
+  /**
+   * Copies all events from a given date in the active calendar to another calendar
+   * on a new date, adjusting times to match the target calendar's timezone.
+   *
+   * @param srcDate   the source date to copy from
+   * @param targetCal the calendar to copy events into
+   * @param destDate  the target date to copy events to
+   * @return the number of events successfully copied
+   */
+  int copyEventsOnDateToCalendar(LocalDate srcDate, String targetCal, LocalDate destDate);
+
+  /**
+   * Copies all events within a date/time range from the active calendar
+   * to another calendar, starting at a given destination start time and
+   * preserving the original time gaps, adjusting for timezones.
+   *
+   * @param start      the start of the source range
+   * @param end        the end of the source range
+   * @param targetCal  the name of the calendar to copy to
+   * @param destStart  the start time for the first copied event in the target calendar
+   * @return the number of events successfully copied
+   */
+  int copyEventsBetweenDatesToCalendar(LocalDateTime start, LocalDateTime end,
+                                       String targetCal, LocalDateTime destStart);
 
   /**
    * Lists all existing calendar names.

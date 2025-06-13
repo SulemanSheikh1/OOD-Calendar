@@ -151,7 +151,8 @@ public class CalendarModel implements ICalendarModel {
    * @return a brand‐new Event reflecting the single change
    * @throws IllegalArgumentException if property is unrecognized or newValue is badly formatted
    */
-  public Event createModifiedEvent(Event base, String property, String newValue, DateTimeFormatter formatter) {
+  public Event createModifiedEvent(Event base, String property, String newValue,
+                                   DateTimeFormatter formatter) {
     Event copy = new Event(
             base.getSubject(),
             base.getStart(),
@@ -202,7 +203,8 @@ public class CalendarModel implements ICalendarModel {
    * @param formatter the formatter to parse new date/time values if needed
    * @return true if the event was successfully edited; false if there was a conflict
    */
-  public boolean editSingleEvent(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
+  public boolean editSingleEvent(IEvent event, String property, String newValue,
+                                 DateTimeFormatter formatter) {
     Event base = (Event) event;
     Event modified = createModifiedEvent(base, property, newValue, formatter);
 
@@ -227,7 +229,8 @@ public class CalendarModel implements ICalendarModel {
    * @param formatter the formatter to parse date/time values
    * @return the number of events successfully modified
    */
-  public int editFutureEvents(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
+  public int editFutureEvents(IEvent event, String property, String newValue,
+                              DateTimeFormatter formatter) {
     Event base = (Event) event;
 
     UUID seriesId = base.getSeriesId();
@@ -268,7 +271,8 @@ public class CalendarModel implements ICalendarModel {
    * @param formatter the formatter to parse date/time values
    * @return the number of events successfully modified
    */
-  public int editWholeSeries(IEvent event, String property, String newValue, DateTimeFormatter formatter) {
+  public int editWholeSeries(IEvent event, String property, String newValue,
+                             DateTimeFormatter formatter) {
     Event base = (Event) event;
 
     UUID seriesId = base.getSeriesId();

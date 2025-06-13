@@ -1,13 +1,13 @@
 package calendar.controller;
 
 /**
- * Defines the public API of a calendar controller:
- *  - processing a single command (for tests or headless mode)
- *  - running the interactive loop (for interactive mode)
+ * Defines the public API of a calendar controller.
+ * A calendar controller can process single commands (for tests or headless mode)
+ * and run an interactive loop (for interactive user input).
  */
 public interface ICalendarController {
   /**
-   * Process exactly one user command string.
+   * Processes exactly one user command string.
    * May print output or errors to stdout.
    *
    * @param command the raw command line
@@ -15,10 +15,16 @@ public interface ICalendarController {
   void processCommand(String command);
 
   /**
-   * Start the interactive read–eval–print loop,
-   * reading commands from stdin until "exit".
+   * Starts the interactive read–eval–print loop.
+   * Reads commands from stdin until "exit" is received.
    */
   void runInteractive();
 
+  /**
+   * Executes commands from a file in headless mode.
+   * Stops when "exit" is encountered or file ends.
+   *
+   * @param filePath the path to the script file containing commands
+   */
   void runHeadless(String filePath);
 }

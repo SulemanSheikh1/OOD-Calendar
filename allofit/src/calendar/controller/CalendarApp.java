@@ -6,12 +6,17 @@ import calendar.view.CalendarView;
 import calendar.view.ICalendarView;
 
 /**
- * Calendar app that represents a calendar and has all the functions a calendar has.
- * You can add events and edit.
+ * The entry point for the Calendar application.
+ * This class sets up the controller and supports both interactive and headless modes.
+ * Users can add, edit, copy, and query calendar events across multiple named calendars.
  */
 public class CalendarApp {
   private final ICalendarController controller;
 
+  /**
+   * Constructs a new CalendarApp.
+   * Initializes the calendar library, view, and controller components.
+   */
   public CalendarApp() {
     ICalendarLibrary library = new CalendarLibrary();
     ICalendarView view = new CalendarView();
@@ -19,7 +24,10 @@ public class CalendarApp {
   }
 
   /**
-   * Constructs a CalendarApp with a new library, view, and controller.
+   * Starts the calendar application.
+   * Accepts command-line arguments to choose between interactive and headless mode.
+   *
+   * @param args command-line arguments specifying mode and optional script file
    */
   public static void main(String[] args) {
     CalendarApp app = new CalendarApp();
