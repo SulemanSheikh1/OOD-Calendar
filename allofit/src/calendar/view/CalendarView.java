@@ -90,7 +90,7 @@ public class CalendarView implements ICalendarView {
    */
   private String formatEvent(IEvent event) {
     StringBuilder sb = new StringBuilder();
-    sb.append("• ").append(event.getSubject());
+    sb.append("• \"").append(event.getSubject()).append("\"");
     sb.append(" (").append(formatDateTime(event.getStart()));
     sb.append(" - ").append(formatDateTime(event.getEnd())).append(")");
 

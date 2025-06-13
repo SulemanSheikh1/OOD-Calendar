@@ -235,7 +235,7 @@ public class CalendarController implements ICalendarController {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
       library.getActiveCalendar().addEvent(event);
-      System.out.println("Created timed event: " + subject);
+      System.out.println("Created timed event: \"" + subject + "\"");
     }
   }
 
@@ -245,10 +245,10 @@ public class CalendarController implements ICalendarController {
       if (endQuote == -1) {
         throw new IllegalArgumentException("Unclosed quote in subject");
       }
-      return input.substring(0, endQuote + 1);  // include quotes
+      return input.substring(0, endQuote + 1);
     } else {
       int space = input.indexOf(" ");
-      return space == -1 ? input : input.substring(0, space);
+      return (space == -1) ? input : input.substring(0, space);
     }
   }
 
@@ -286,10 +286,10 @@ public class CalendarController implements ICalendarController {
 
     if (repeatParts[1].equals("for")) {
       handleRecurringEventHelper(subject, start, end, repeatParts, days);
-      System.out.println("Created recurring timed event series: " + subject);
+      System.out.println("Created recurring timed event series: \"" + subject + "\"");
     } else if (repeatParts[1].equals("until")) {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
-      System.out.println("Created recurring timed event series: " + subject);
+      System.out.println("Created recurring timed event series: \"" + subject + "\"");
     } else {
       throw new IllegalArgumentException("Invalid recurring event specification. " +
               "Must include 'for' or 'until'.");
@@ -523,8 +523,9 @@ public class CalendarController implements ICalendarController {
    */
   private void handleCreateAllDayEvent(String command) {
     String remaining = command.substring("create event ".length());
-    String subject = extractQuotedSubject(remaining);
-    remaining = remaining.substring(subject.length()).trim();
+    String quoted = extractQuotedSubjectRaw(remaining);
+    String subject = quoted.substring(1, quoted.length() - 1);
+    remaining = remaining.substring(quoted.length()).trim();
 
     if (!remaining.startsWith("on ")) {
       throw new IllegalArgumentException("Missing 'on' in all-day event creation");
@@ -547,7 +548,7 @@ public class CalendarController implements ICalendarController {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
       library.getActiveCalendar().addEvent(event);
-      System.out.println("Created all-day event: " + subject);
+      System.out.println("Created all-day event: \"" + subject + "\"");
     }
   }
 
@@ -573,10 +574,10 @@ public class CalendarController implements ICalendarController {
 
     if (repeatParts[1].equals("for")) {
       handleRecurringEventHelper(subject, start, end, repeatParts, days);
-      System.out.println("Created recurring all-day event series: " + subject);
+      System.out.println("Created recurring all-day event series: \"" + subject + "\"");
     } else if (repeatParts[1].equals("until")) {
       handleRecurringEventSeriesHelper(subject, start, end, repeatParts, days);
-      System.out.println("Created recurring all-day event series: " + subject);
+      System.out.println("Created recurring all-day event series: \"" + subject + "\"");
     } else {
       throw new IllegalArgumentException("Invalid recurring event specification. " +
               "Must include 'for' or 'until'.");
