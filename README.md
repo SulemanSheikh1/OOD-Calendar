@@ -21,6 +21,7 @@ Run headless mode with a command script:
 ### Multi-Calendar Support
 
 ✅	Create multiple calendars with unique names and timezones
+✅  Updated ICalendarLibrary and ICalendarModel to include support for multi-calendar management.
 ✅	Switch between calendars (`switch calendar <name>`)
 ✅	Edit calendar name or timezone
 ✅	Delete calendars, list existing calendars
@@ -54,7 +55,7 @@ Run headless mode with a command script:
 
 ✅	`copy event "Subject" on <datetime> --target <calendar> to <datetime>`
 ✅	`copy events on <date> --target <calendar> to <date>` (timezone converted)
-✅	`copy events between <start> and <end> --target <calendar> to <datetime>` (shifts relative timing)
+✅	`copy events between <start> and <end> --target <calendar> to <datetime>`
 ✅	Partial event series are copied with `seriesId` retained
 ✅	Conflict detection applied in destination calendar
 
@@ -74,7 +75,8 @@ Run headless mode with a command script:
     * Implemented `CalendarView` and `ICalendarView`, `Event`,
     * `EventSeries`, `IEvent`, `SingleEvent`
        * Created `CalendarLibrary` for managing multiple calendars and timezones
-       * Implemented `copyEventToCalendar`, `copyEventsOnDateToCalendar`, `copyEventsBetweenDatesToCalendar`
+       * Implemented `copyEventToCalendar`, `copyEventsOnDateToCalendar`,
+       * `copyEventsBetweenDatesToCalendar`
        * Developed full controller support for event creation, editing, and copy commands
        * Wrote unit tests:
 
@@ -87,7 +89,8 @@ Run headless mode with a command script:
 
     * Built `CalendarModel` (event storage, query, conflict detection)
     * Created `CalendarLibrary` for managing multiple calendars and timezones
-    * Implemented `copyEventToCalendar`, `copyEventsOnDateToCalendar`, `copyEventsBetweenDatesToCalendar`
+    * Implemented `copyEventToCalendar`, `copyEventsOnDateToCalendar`,
+    * `copyEventsBetweenDatesToCalendar`
     * Extended controller parsing for `edit`, `edits`, `edit series`
     * Created JUnit tests:
 

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import calendar.model.CalendarLibrary;
@@ -225,6 +226,35 @@ public class CalendarLibraryTest {
     assertEquals("Office", library.getCurrentCalendarName());
   }
 
+  @Test
+  public void testCopySingleEventAcrossTimezones() {
+    CalendarLibrary library = new CalendarLibrary();
+    library.createCalendar("NY", "America/New_York");     // Eastern Time
+    library.createCalendar("CA", "America/Los_Angeles");  // Pacific Time
+
+    library.useCalendar("NY");
+    LocalDateTime nyStart = LocalDateTime.of(2025, 7, 1, 13, 0);
+    LocalDateTime nyEnd = LocalDateTime.of(2025, 7, 1, 14, 0);
+    Event event = new Event("Lunch", nyStart, nyEnd);
+    library.getActiveCalendar().addEvent(event);
+
+    ZonedDateTime sourceZoned = nyStart.atZone(ZoneId.of("America/New_York"));
+    ZonedDateTime targetZoned = sourceZoned.withZoneSameInstant(ZoneId.of("America/Los_Angeles"));
+    LocalDateTime caStart = targetZoned.toLocalDateTime();
+
+    Event copied = (Event) event.copyWithNewTime(caStart);
+
+    library.useCalendar("CA");
+    library.getActiveCalendar().addEvent(copied);
+
+    List<IEvent> events = library.getActiveCalendar().getEventsOnDate(caStart.toLocalDate());
+
+    assertEquals(1, events.size());
+    assertEquals("Lunch", events.get(0).getSubject());
+    assertEquals(caStart, events.get(0).getStart());
+  }
+
+
   /**
    * Tests error when trying to use a nonexistent calendar.
    */
@@ -258,6 +288,49 @@ public class CalendarLibraryTest {
   public void testDeleteNonexistent() {
     lib.deleteCalendar("Ghost");
   }
+
+  @Test
+  public void testCopyEventsInRangeSameTimezone() {
+    CalendarLibrary library = new CalendarLibrary();
+    library.createCalendar("Source", "America/New_York");
+    library.createCalendar("Target", "America/New_York");
+
+    library.useCalendar("Source");
+
+    // Add two events in range
+    LocalDateTime start1 = LocalDateTime.of(2025, 7, 1, 9, 0);
+    LocalDateTime end1 = LocalDateTime.of(2025, 7, 1, 10, 0);
+    Event e1 = new Event("Morning Sync", start1, end1);
+    library.getActiveCalendar().addEvent(e1);
+
+    LocalDateTime start2 = LocalDateTime.of(2025, 7, 2, 14, 0);
+    LocalDateTime end2 = LocalDateTime.of(2025, 7, 2, 15, 0);
+    Event e2 = new Event("Afternoon Review", start2, end2);
+    library.getActiveCalendar().addEvent(e2);
+
+    // Copy events between 7/1 and 7/2 to 7/10
+    List<IEvent> toCopy = library.getActiveCalendar()
+            .getEventsWithinDates(LocalDateTime.of(2025, 7, 1, 0, 0), LocalDateTime.of(2025, 7, 2, 23, 59));
+    List<Event> copied = new ArrayList<>();
+    for (IEvent e : toCopy) {
+      LocalDateTime shifted = e.getStart().plusDays(9); // shift to July 10-11
+      copied.add((Event) e.copyWithNewTime(shifted));
+    }
+
+    library.useCalendar("Target");
+    for (Event e : copied) {
+      library.getActiveCalendar().addEvent(e);
+    }
+
+    List<IEvent> result1 = library.getActiveCalendar().getEventsOnDate(LocalDate.of(2025, 7, 10));
+    List<IEvent> result2 = library.getActiveCalendar().getEventsOnDate(LocalDate.of(2025, 7, 11));
+
+    assertEquals(1, result1.size());
+    assertEquals("Morning Sync", result1.get(0).getSubject());
+    assertEquals(1, result2.size());
+    assertEquals("Afternoon Review", result2.get(0).getSubject());
+  }
+
 
   /**
    * Tests that creating a calendar sets the correct name and timezone.
