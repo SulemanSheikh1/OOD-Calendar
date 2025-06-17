@@ -13,7 +13,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import javax.swing.*;
+
 import calendar.model.CalendarLibrary;
+import calendar.view.CalendarGUIView;
 import calendar.view.CalendarView;
 import calendar.model.Event;
 import calendar.model.EventSeries;
@@ -894,5 +897,20 @@ public class CalendarController implements ICalendarController {
     } catch (Exception e) {
       System.out.println("Error: " + e.getMessage());
     }
+  }
+
+  /**
+   * Launches the user interface for the calendar application.
+   * This is the creation of the GUI on the Swing event-dispatch thread.
+   *
+   * The GUI allows the user to view a schedule starting from a selected date,
+   * and create new calendar events using simple interactive controls.
+   */
+  @Override
+  public void runGUI() {
+    SwingUtilities.invokeLater(() -> {
+      CalendarGUIView gui = new CalendarGUIView(this);
+      gui.setVisible(true);
+    });
   }
 }

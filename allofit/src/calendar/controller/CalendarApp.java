@@ -32,24 +32,19 @@ public class CalendarApp {
   public static void main(String[] args) {
     CalendarApp app = new CalendarApp();
 
-    if (args.length < 2 || !args[0].equalsIgnoreCase("--mode")) {
-      System.out.println("Error: Must specify mode as"
-              + " --mode interactive or --mode headless <file>");
-      return;
-    }
-
-    String mode = args[1];
-
-    if (mode.equalsIgnoreCase("interactive")) {
-      app.controller.runInteractive();
-    } else if (mode.equalsIgnoreCase("headless")) {
-      if (args.length < 3) {
-        System.out.println("Error: Missing filename for headless mode.");
-        return;
+    if (args.length == 0) {
+      app.controller.runGUI();
+    } else if (args.length >= 2 && args[0].equalsIgnoreCase("--mode")) {
+      if (args[1].equalsIgnoreCase("interactive")) {
+        app.controller.runInteractive();
+      } else if (args[1].equalsIgnoreCase("headless") && args.length >= 3) {
+        app.controller.runHeadless(args[2]);
+      } else {
+        System.out.println("Error: Invalid mode or missing file path.");
       }
-      app.controller.runHeadless(args[2]);
     } else {
-      System.out.println("Error: Unknown mode. Use 'interactive' or 'headless'.");
+      System.out.println("Error: Must specify mode as --mode interactive or --mode headless <file>");
     }
   }
+
 }

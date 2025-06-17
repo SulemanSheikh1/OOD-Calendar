@@ -27,4 +27,10 @@ public interface ICalendarController {
    * @param filePath the path to the script file containing commands
    */
   void runHeadless(String filePath);
+
+  /**
+   * Launches the graphical user interface GUI for the calendar.
+   * This mode allows the user to interact with the calendar using Swing components.
+   */
+  void runGUI();
 }
