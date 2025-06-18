@@ -21,7 +21,10 @@ public class CalendarApp {
     ICalendarLibrary library = new CalendarLibrary();
     ICalendarView view = new CalendarView();
     this.controller = new CalendarController((CalendarLibrary) library, (CalendarView) view);
+    this.controller.processCommand("create calendar \"Default\" America/New_York");
+    this.controller.processCommand("switch calendar \"Default\"");
   }
+
 
   /**
    * Starts the calendar application.
