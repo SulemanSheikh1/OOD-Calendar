@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  * A Swing-based view for the calendar app.
  * Provides UI for viewing and creating events.
  */
-public class CalendarGUIView extends JFrame {
+public class CalendarGUIView extends JFrame implements ICalendarView {
   private final JTextField dateField;
   private final JTextField subjectField;
   private final JTextField startField;
@@ -92,11 +93,13 @@ public class CalendarGUIView extends JFrame {
   private void handleViewSchedule(ActionEvent e) {
     try {
       LocalDate date = LocalDate.parse(dateField.getText().trim(), DATE_FORMAT);
-      controller.processCommand("print events on " + date);
+      List<Event> events = controller.getEventsOnDate(date);
+      displayEvents(events);
     } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "Invalid date format. Use yyyy-MM-dd.", "Input Error", JOptionPane.ERROR_MESSAGE);
+      outputArea.append("Invalid date format. Use yyyy-MM-dd.\n");
     }
   }
+
 
   /**
    * Handles the "Create Event" button.
@@ -123,6 +126,24 @@ public class CalendarGUIView extends JFrame {
   }
 
   /**
+   * Displays the welcome message.
+   * Doesn't do anything in this GUI view.
+   */
+  @Override
+  public void displayWelcomeMessage() {
+
+  }
+
+  /**
+   * Displays a list of all commands for creating, editing, and managing events.
+   * Doesn't do anything in this GUI view.
+   */
+  @Override
+  public void displayHelp() {
+
+  }
+
+  /**
    * Displays the given events in the output area.
    *
    * @param events the list of events
@@ -140,5 +161,28 @@ public class CalendarGUIView extends JFrame {
         outputArea.append("-----------------\n");
       }
     }
+  }
+
+  /**
+   * Displays a single event.
+   * Doesn't do anything in this GUI view.
+   *
+   * @param event the event.
+   */
+  @Override
+  public void displayEvent(Event event) {
+
+  }
+
+  /**
+   * Formats a LocalDateTime into a string.
+   * Doesn't do anything in this GUI view.
+   *
+   * @param dateTime the date and time
+   * @return empty string
+   */
+  @Override
+  public String formatDateTime(LocalDateTime dateTime) {
+    return "";
   }
 }

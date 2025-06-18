@@ -17,23 +17,22 @@ import javax.swing.*;
 
 import calendar.model.CalendarLibrary;
 import calendar.view.CalendarGUIView;
-import calendar.view.CalendarView;
 import calendar.model.Event;
 import calendar.model.EventSeries;
 import calendar.model.IEvent;
+import calendar.view.ICalendarView;
 
 /**
  * Class that represents the controller for the calendar.
  */
 public class CalendarController implements ICalendarController {
   private final CalendarLibrary library;
-  private final CalendarView view;
-  private final Scanner scanner = new Scanner(System.in);
-  private boolean running;
+  private final ICalendarView view;
+  private CalendarGUIView guiView;
   private static final DateTimeFormatter DATE_TIME_FORMAT =
           DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
-  public CalendarController(CalendarLibrary library, CalendarView view) {
+  public CalendarController(CalendarLibrary library, ICalendarView view) {
     this.library = library;
     this.view = view;
   }
@@ -241,7 +240,12 @@ public class CalendarController implements ICalendarController {
         throw new IllegalArgumentException("Cannot create duplicate event.");
       }
       library.getActiveCalendar().addEvent(event);
-      System.out.println("Created timed event: \"" + subject + "\"");
+      if (guiView != null) {
+        guiView.displayEvents(List.of(event));
+      } else {
+        System.out.println("Created timed event: \"" + subject + "\"");
+      }
+
     }
   }
 
@@ -689,7 +693,6 @@ public class CalendarController implements ICalendarController {
     }
   }
 
-
   /**
    * Handles the "create calendar" command.
    * Extracts the calendar name and timezone from the command string,
@@ -900,17 +903,41 @@ public class CalendarController implements ICalendarController {
   }
 
   /**
+   * Sets the GUI view for the calendar application.
+   *
+   * @param gui the GUI view to use
+   */
+  public void setGUIView(CalendarGUIView gui) {
+    this.guiView = gui;
+  }
+
+  /**
    * Launches the user interface for the calendar application.
    * This is the creation of the GUI on the Swing event-dispatch thread.
-   *
-   * The GUI allows the user to view a schedule starting from a selected date,
-   * and create new calendar events using simple interactive controls.
    */
   @Override
   public void runGUI() {
     SwingUtilities.invokeLater(() -> {
       CalendarGUIView gui = new CalendarGUIView(this);
+      setGUIView(gui);
       gui.setVisible(true);
     });
+  }
+
+  /**
+   * Gets a list of events for the specified date from the active calendar.
+   * Converts IEvent objects to Event objects before returning.
+   *
+   * @param date the date where the events are
+   * @return a list of events on that date
+   */
+  @Override
+  public List<Event> getEventsOnDate(LocalDate date) {
+    List<IEvent> events = library.getActiveCalendar().getEventsOnDate(date);
+    List<Event> result = new ArrayList<>();
+    for (IEvent e : events) {
+      result.add((Event) e);
+    }
+    return result;
   }
 }

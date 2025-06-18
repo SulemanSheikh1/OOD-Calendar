@@ -2,6 +2,7 @@ package calendar.controller;
 
 import calendar.model.CalendarLibrary;
 import calendar.model.ICalendarLibrary;
+import calendar.view.CalendarGUIView;
 import calendar.view.CalendarView;
 import calendar.view.ICalendarView;
 
@@ -15,16 +16,17 @@ public class CalendarApp {
 
   /**
    * Constructs a new CalendarApp.
-   * Initializes the calendar library, view, and controller components.
+   * Initializes the calendar library, GUIview, and controller components.
    */
   public CalendarApp() {
     ICalendarLibrary library = new CalendarLibrary();
-    ICalendarView view = new CalendarView();
-    this.controller = new CalendarController((CalendarLibrary) library, (CalendarView) view);
+    CalendarController ctrl = new CalendarController((CalendarLibrary) library, new CalendarView());
+    CalendarGUIView gui = new CalendarGUIView(ctrl);
+    ctrl.setGUIView(gui);
+    this.controller = ctrl;
     this.controller.processCommand("create calendar \"Default\" America/New_York");
     this.controller.processCommand("switch calendar \"Default\"");
   }
-
 
   /**
    * Starts the calendar application.
@@ -37,7 +39,7 @@ public class CalendarApp {
 
     if (args.length == 0) {
       app.controller.runGUI();
-    } else if (args.length >= 2 && args[0].equalsIgnoreCase("--mode")) {
+    } else if (args.length >= 2 && args[0].equalsIgnoreCase("mode")) {
       if (args[1].equalsIgnoreCase("interactive")) {
         app.controller.runInteractive();
       } else if (args[1].equalsIgnoreCase("headless") && args.length >= 3) {
@@ -46,8 +48,7 @@ public class CalendarApp {
         System.out.println("Error: Invalid mode or missing file path.");
       }
     } else {
-      System.out.println("Error: Must specify mode as --mode interactive or --mode headless <file>");
+      System.out.println("Error: Must specify mode: interactive or mode headless <file>");
     }
   }
-
 }

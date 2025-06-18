@@ -1,5 +1,10 @@
 package calendar.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import calendar.model.Event;
+
 /**
  * Defines the public API of a calendar controller.
  * A calendar controller can process single commands (for tests or headless mode)
@@ -33,4 +38,12 @@ public interface ICalendarController {
    * This mode allows the user to interact with the calendar using Swing components.
    */
   void runGUI();
+
+  /**
+   * Gets a list of events scheduled for a specified date.
+   *
+   * @param date the date where the events are
+   * @return a list of events on that date
+   */
+  List<Event> getEventsOnDate(LocalDate date);
 }
