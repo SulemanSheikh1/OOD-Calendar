@@ -22,6 +22,7 @@ public class CalendarGUIView extends JFrame {
   private final JTextField endField;
   private final JTextArea outputArea;
   private final ICalendarController controller;
+  private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   private void clearFields() {
     dateField.setText("");
@@ -29,9 +30,6 @@ public class CalendarGUIView extends JFrame {
     startField.setText("");
     endField.setText("");
   }
-
-  private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-  private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
   /**
    * Constructs the GUI view and links it to the controller.
