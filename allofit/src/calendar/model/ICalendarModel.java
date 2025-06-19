@@ -74,10 +74,12 @@ public interface ICalendarModel {
   /**
    * Returns a list of up to 10 events that occur on or after the specified date.
    * The returned list is sorted by event start time in ascending order.
-   * If there are fewer than 10 events starting on or after the given date, all such events are returned.
+   * If there are fewer than 10 events starting on or after the given date, all such
+   * events are returned.
    *
    * @param date the starting date from which to retrieve events (inclusive)
-   * @return a list of events starting from the specified date, sorted by start time, limited to 10 events
+   * @return a list of events starting from the specified date, sorted by start time,
+   * limited to 10 events
    */
   List<IEvent> getEventsFromDate(LocalDate date);
 

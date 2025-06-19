@@ -448,7 +448,8 @@ public class CalendarController implements ICalendarController {
     System.out.println("DEBUG: Timezone-aware handlePrintEvents() called.");
     EditCommand editCmd = parseEditCommand(command);
 
-    IEvent matchingEvent = library.getActiveCalendar().findEvent(editCmd.subject, editCmd.fromDateTime);
+    IEvent matchingEvent = library.getActiveCalendar().findEvent(editCmd.subject,
+            editCmd.fromDateTime);
     if (matchingEvent == null) {
       view.displayError("Error: Event not found.");
       return;
@@ -876,7 +877,8 @@ public class CalendarController implements ICalendarController {
       }
 
       if (sourceDate == null || targetCalendar == null || destinationDate == null) {
-        throw new IllegalArgumentException("Missing required arguments for copy events on command.");
+        throw new IllegalArgumentException("Missing required arguments for "
+                + "copy events on command.");
       }
 
       int count = library.copyEventsOnDateToCalendar(sourceDate, targetCalendar, destinationDate);
@@ -888,9 +890,6 @@ public class CalendarController implements ICalendarController {
 
   private void handleCopyEventsBetweenDates(String command) {
     try {
-      // Expected syntax:
-      // copy events between <start> and <end> --source <sourceCalendar> --target <targetCalendar> to <date>
-
       String[] tokens = command.split("\\s+");
       LocalDate startDate = null;
       LocalDate endDate = null;

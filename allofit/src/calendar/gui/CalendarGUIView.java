@@ -9,8 +9,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Main GUI view for the Calendar application using Java Swing.
- * Provides a graphical interface for viewing and managing calendar events.
+ * The main graphical user interface view for the Calendar application using Java Swing.
+ * Provides input fields for creating events, viewing events for a specific date,
+ * and editing existing events.
  */
 public class CalendarGUIView extends JFrame implements ICalendarGUIView {
 
@@ -21,10 +22,12 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
   private final JTextField endField = new JTextField(20);
   private final DefaultListModel<String> eventListModel = new DefaultListModel<>();
   private final JList<String> eventList = new JList<>(eventListModel);
-  private final JButton editButton = new JButton("Edit Selected Event");
-
   private List<IEvent> lastShownEvents;
 
+  /**
+   * Constructs the Calendar GUI view.
+   * Builds all GUI components and layouts.
+   */
   public CalendarGUIView() {
     super("Calendar Application");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -57,6 +60,7 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
     JPanel centerPanel = new JPanel(new BorderLayout());
     centerPanel.add(inputPanel, BorderLayout.NORTH);
     centerPanel.add(scrollPane, BorderLayout.CENTER);
+    JButton editButton = new JButton("Edit Selected Event");
     centerPanel.add(editButton, BorderLayout.SOUTH);
 
     add(topPanel, BorderLayout.NORTH);
@@ -73,6 +77,10 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
     editButton.addActionListener(e -> handleEditEvent());
   }
 
+  /**
+   * Handles the create event button click.
+   * Gathers user input and sends it to the controller to create the event.
+   */
   private void handleCreateEvent() {
     String subject = subjectField.getText().trim();
     String start = startField.getText().trim();
@@ -80,17 +88,28 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
     controller.createEvent(subject, start, end);
   }
 
+  /**
+   * Handles the view schedule button click.
+   * Requests events for the entered date from the controller.
+   */
   private void handleViewSchedule() {
     String date = dateField.getText().trim();
     controller.loadEventsFromDate(date);
   }
 
+  /**
+   * Clears all input fields in the create event form.
+   */
   private void clearFields() {
     subjectField.setText("");
     startField.setText("");
     endField.setText("");
   }
 
+  /**
+   * Handles edit event button click.
+   * Opens the edit dialog for the selected event in the schedule view.
+   */
   private void handleEditEvent() {
     int index = eventList.getSelectedIndex();
     if (index == -1 || lastShownEvents == null || index >= lastShownEvents.size()) {
@@ -101,6 +120,10 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
     openEditDialog(selectedEvent);
   }
 
+  /**
+   * Opens a dialog window allowing the user to edit the selected event's details.
+   * @param event the event to edit
+   */
   private void openEditDialog(IEvent event) {
     JTextField subjectEdit = new JTextField(event.getSubject());
     JTextField startEdit = new JTextField(event.getStart().toString().replace('T',' '));
@@ -125,11 +148,19 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
     }
   }
 
+  /**
+   * Sets the controller for this view.
+   * @param controller the controller to use
+   */
   @Override
   public void setController(ICalendarGUIController controller) {
     this.controller = controller;
   }
 
+  /**
+   * Displays the list of events retrieved from the controller.
+   * @param events the list of events to display
+   */
   @Override
   public void showEvents(List<IEvent> events) {
     eventListModel.clear();
@@ -145,6 +176,10 @@ public class CalendarGUIView extends JFrame implements ICalendarGUIView {
     }
   }
 
+  /**
+   * Displays an error message to the user.
+   * @param message the error message
+   */
   @Override
   public void showError(String message) {
     JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);

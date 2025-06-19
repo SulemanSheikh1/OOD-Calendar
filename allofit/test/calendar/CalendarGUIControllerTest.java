@@ -32,13 +32,19 @@ public class CalendarGUIControllerTest {
     ICalendarGUIView dummyView = new ICalendarGUIView() {
 
       @Override
-      public void setController(ICalendarGUIController controller) {}
+      public void setController(ICalendarGUIController controller) {
+        //dummy stuff
+      }
 
       @Override
-      public void showEvents(List<IEvent> events) {}
+      public void showEvents(List<IEvent> events) {
+        //dummy stuff
+      }
 
       @Override
-      public void showError(String message) {}
+      public void showError(String message) {
+        //dummy stuff
+      }
     };
 
     controller = new CalendarGUIController(library, dummyView);

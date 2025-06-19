@@ -11,14 +11,13 @@ import calendar.view.CalendarView;
  */
 public class CalendarApp {
   private final ICalendarController controller;
-  private final ICalendarLibrary library;
 
   /**
    * Constructs a new CalendarApp without creating GUI immediately.
    */
   public CalendarApp() {
-    this.library = new CalendarLibrary();
-    this.controller = new CalendarController((CalendarLibrary) library, new CalendarView());
+    ICalendarLibrary library = new CalendarLibrary();
+    this.controller = new CalendarController(library, new CalendarView());
 
     // Create default calendar on startup
     this.controller.processCommand("create calendar \"Default\" America/New_York");
@@ -34,7 +33,8 @@ public class CalendarApp {
     CalendarApp app = new CalendarApp();
 
     if (args.length == 0) {
-      System.out.println("Error: Must specify mode: --mode interactive, --mode headless <file>, or --mode gui");
+      System.out.println("Error: Must specify mode: --mode interactive, --mode headless <file>,"
+              + " or --mode gui");
     } else if (args.length >= 2 && args[0].equalsIgnoreCase("--mode")) {
       if (args[1].equalsIgnoreCase("interactive")) {
         app.controller.runInteractive();
@@ -49,7 +49,8 @@ public class CalendarApp {
         System.out.println("Error: Invalid mode or missing file path.");
       }
     } else {
-      System.out.println("Error: Must specify mode: --mode interactive, --mode headless <file>, or --mode gui");
+      System.out.println("Error: Must specify mode: --mode interactive, --mode headless <file>,"
+              + " or --mode gui");
     }
   }
 }
