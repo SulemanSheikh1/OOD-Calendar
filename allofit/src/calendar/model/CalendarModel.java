@@ -20,6 +20,7 @@ public class CalendarModel implements ICalendarModel {
 
   /**
    * Makes a new Calendar with a specific timezone.
+   *
    * @param timezone the current timezone we are in
    */
   public CalendarModel(ZoneId timezone) {
@@ -103,7 +104,7 @@ public class CalendarModel implements ICalendarModel {
    * Gets all events within two dates.
    *
    * @param beginning the start date of the range.
-   * @param ending the end date of the range.
+   * @param ending    the end date of the range.
    * @return all events within the date range.
    */
   public List<IEvent> getEventsWithinDates(LocalDateTime beginning, LocalDateTime ending) {
@@ -161,7 +162,7 @@ public class CalendarModel implements ICalendarModel {
    * @throws IllegalArgumentException if property is unrecognized or newValue is badly formatted
    */
   public IEvent createModifiedEvent(Event base, String property, String newValue,
-                                   DateTimeFormatter formatter) {
+                                    DateTimeFormatter formatter) {
     IEvent copy = new Event(
             base.getSubject(),
             base.getStart(),
@@ -295,7 +296,6 @@ public class CalendarModel implements ICalendarModel {
   public List<IEvent> getEvents() {
     return new ArrayList<>(events);
   }
-
 
 
   /**

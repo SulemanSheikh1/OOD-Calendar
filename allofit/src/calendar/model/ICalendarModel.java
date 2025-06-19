@@ -32,7 +32,7 @@ public interface ICalendarModel {
    * Finds event through subject and start time.
    *
    * @param subject the subject of the event
-   * @param start the start time
+   * @param start   the start time
    * @return the matching event
    */
   IEvent findEvent(String subject, LocalDateTime start);
@@ -49,7 +49,7 @@ public interface ICalendarModel {
    * Gets all events within the range of dates.
    *
    * @param beginning the start of the range
-   * @param ending the end of the range
+   * @param ending    the end of the range
    * @return a list of matching events
    */
   List<IEvent> getEventsWithinDates(LocalDateTime beginning, LocalDateTime ending);
@@ -99,7 +99,7 @@ public interface ICalendarModel {
    * @return true if the event was successfully edited; false if there was a conflict
    */
   boolean editSingleEvent(IEvent event, String property, String newValue,
-                                 DateTimeFormatter formatter);
+                          DateTimeFormatter formatter);
 
   /**
    * Edits all future events in the same recurring series as the given event,
@@ -114,7 +114,7 @@ public interface ICalendarModel {
    * @return the number of events successfully modified
    */
   int editFutureEvents(IEvent event, String property, String newValue,
-                              DateTimeFormatter formatter);
+                       DateTimeFormatter formatter);
 
   /**
    * Edits all events in the recurring series to which the given event belongs.
@@ -128,7 +128,7 @@ public interface ICalendarModel {
    * @return the number of events successfully modified
    */
   int editWholeSeries(IEvent event, String property, String newValue,
-                             DateTimeFormatter formatter);
+                      DateTimeFormatter formatter);
 
   /**
    * Creates a new Event object by copying all fields of `base`, then changing exactly one property.
@@ -142,22 +142,25 @@ public interface ICalendarModel {
    * @throws IllegalArgumentException if property is unrecognized or newValue is badly formatted
    */
   IEvent createModifiedEvent(Event base, String property, String newValue,
-                                    DateTimeFormatter formatter);
+                             DateTimeFormatter formatter);
 
   /**
    * Get the timezone of this calendar.
+   *
    * @return the ZoneId representing this calendar's timezone
    */
   ZoneId getTimezone();
 
   /**
    * Set the timezone of this calendar.
+   *
    * @param timezone the new timezone to set
    */
   void setTimezone(ZoneId timezone);
 
   /**
    * Get the timezone in the creation of this calendar.
+   *
    * @return ZoneId representing the timezone in the creation of this calendar.
    */
   ZoneId getCreationTimezone();

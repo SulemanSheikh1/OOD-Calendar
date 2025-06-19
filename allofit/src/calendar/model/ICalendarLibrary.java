@@ -3,7 +3,6 @@ package calendar.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -15,8 +14,8 @@ public interface ICalendarLibrary {
   /**
    * Creates a new calendar with the given unique name and timezone ID.
    *
-   * @param name            the unique name for the calendar
-   * @param timezoneString  the IANA timezone ID (e.g. "America/New_York")
+   * @param name           the unique name for the calendar
+   * @param timezoneString the IANA timezone ID (e.g. "America/New_York")
    * @throws IllegalArgumentException if the name already exists or the timezone is invalid
    */
   void createCalendar(String name, String timezoneString);
@@ -48,11 +47,11 @@ public interface ICalendarLibrary {
   /**
    * Edits a calendar's name or timezone.
    *
-   * @param name      the existing calendar name
-   * @param property  either "name" or "timezone"
-   * @param newValue  the new name or timezone ID
+   * @param name     the existing calendar name
+   * @param property either "name" or "timezone"
+   * @param newValue the new name or timezone ID
    * @throws IllegalArgumentException if the calendar doesn't exist,
-   *         the new name already exists, or the timezone is invalid
+   *                                  the new name already exists, or the timezone is invalid
    */
   void editCalendar(String name, String property, String newValue);
 
@@ -68,10 +67,10 @@ public interface ICalendarLibrary {
    * Copies a single event from the active calendar to another calendar,
    * adjusting for time zone differences.
    *
-   * @param subject    the subject of the event to copy
-   * @param start      the original start time of the event
-   * @param targetCal  the name of the calendar to copy to
-   * @param dest       the new start time in the target calendar's timezone
+   * @param subject   the subject of the event to copy
+   * @param start     the original start time of the event
+   * @param targetCal the name of the calendar to copy to
+   * @param dest      the new start time in the target calendar's timezone
    * @return true if the event was copied successfully; false if not found or conflicts
    */
   boolean copyEventToCalendar(String subject, LocalDateTime start, String targetCal,
@@ -96,9 +95,9 @@ public interface ICalendarLibrary {
    *
    * @param sourceCalendarName name of the source calendar
    * @param targetCalendarName name of the target calendar
-   * @param startDate starting date of the source range (inclusive)
-   * @param endDate ending date of the source range (inclusive)
-   * @param targetDate starting date in the target calendar where events will be shifted to
+   * @param startDate          starting date of the source range (inclusive)
+   * @param endDate            ending date of the source range (inclusive)
+   * @param targetDate         starting date in the target calendar where events will be shifted to
    * @throws IllegalArgumentException if calendars are not found or arguments are invalid
    */
   int copyEventsBetweenDatesToCalendar(String sourceCalendarName,

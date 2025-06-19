@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+
 import javax.swing.SwingUtilities;
 
 import calendar.gui.ICalendarGUIView;
@@ -79,8 +80,6 @@ public class CalendarController implements ICalendarController {
       }
     }
   }
-
-
 
 
   /**
@@ -440,7 +439,6 @@ public class CalendarController implements ICalendarController {
   }
 
 
-
   /**
    * Handles edit commands like editing a single event, future events, or an entire series.
    *
@@ -722,7 +720,6 @@ public class CalendarController implements ICalendarController {
       view.displayError("Missing --name argument.");
     }
   }
-
 
 
   /**

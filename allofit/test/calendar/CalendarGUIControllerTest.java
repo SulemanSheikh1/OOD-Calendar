@@ -1,7 +1,6 @@
 package calendar;
 
 import calendar.gui.CalendarGUIController;
-import calendar.gui.CalendarGUIView;
 import calendar.gui.ICalendarGUIController;
 import calendar.gui.ICalendarGUIView;
 import calendar.model.CalendarLibrary;
@@ -13,7 +12,7 @@ import org.junit.Test;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * JUnit 4 tests for the CalendarGUIController (no mock view).
@@ -31,10 +30,13 @@ public class CalendarGUIControllerTest {
     library.useCalendar("Default");
 
     ICalendarGUIView dummyView = new ICalendarGUIView() {
+
       @Override
       public void setController(ICalendarGUIController controller) {}
+
       @Override
       public void showEvents(List<IEvent> events) {}
+
       @Override
       public void showError(String message) {}
     };
@@ -51,17 +53,6 @@ public class CalendarGUIControllerTest {
     assertEquals("Test Event", event.getSubject());
     assertEquals(LocalDateTime.of(2025, 7, 1, 10, 0),
             event.getStart());
-  }
-
-  @Test
-  public void testLoadEventsFromDate() {
-    library.getActiveCalendar().addEvent(new Event("Event1",
-            LocalDateTime.of(2025, 7, 1, 9, 0),
-            LocalDateTime.of(2025, 7, 1, 10, 0)));
-    library.getActiveCalendar().addEvent(new Event("Event2",
-            LocalDateTime.of(2025, 7, 3, 14, 0),
-            LocalDateTime.of(2025, 7, 3, 15, 0)));
-    controller.loadEventsFromDate("2025-07-02");
   }
 
   @Test

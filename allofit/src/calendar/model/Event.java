@@ -279,7 +279,7 @@ public class Event implements IEvent {
    */
   @Override
   public boolean isSame(Event that) {
-    return  subject.equals(that.subject)
+    return subject.equals(that.subject)
             && start.equals(that.start)
             && end.equals(that.end);
   }

@@ -32,7 +32,7 @@ public class CalendarLibrary implements ICalendarLibrary {
   /**
    * Creates a new calendar with the given name and timezone.
    *
-   * @param name the unique name for the calendar
+   * @param name           the unique name for the calendar
    * @param timezoneString the string ID of the desired timezone
    * @throws IllegalArgumentException if the name already exists or the timezone is invalid
    */
@@ -94,7 +94,7 @@ public class CalendarLibrary implements ICalendarLibrary {
   /**
    * Edits a calendar's name or timezone.
    *
-   * @param name the existing calendar name
+   * @param name     the existing calendar name
    * @param property either "name" or "timezone"
    * @param newValue the new name or timezone string
    * @throws IllegalArgumentException if the calendar doesn't exist,
@@ -143,10 +143,10 @@ public class CalendarLibrary implements ICalendarLibrary {
   /**
    * Copies a single event to another calendar, adjusting for timezones.
    *
-   * @param subject the event subject to identify the source event
-   * @param start the start time of the source event
+   * @param subject   the event subject to identify the source event
+   * @param start     the start time of the source event
    * @param targetCal the name of the calendar to copy into
-   * @param dest the new start time in the target calendar's timezone
+   * @param dest      the new start time in the target calendar's timezone
    * @return true if successfully copied; false otherwise
    */
   public boolean copyEventToCalendar(String subject, LocalDateTime start, String targetCal,
@@ -178,9 +178,9 @@ public class CalendarLibrary implements ICalendarLibrary {
   /**
    * Copies all events on a specific date to another calendar.
    *
-   * @param srcDate the date from which to copy events
+   * @param srcDate   the date from which to copy events
    * @param targetCal the name of the target calendar
-   * @param destDate the date to which events will be copied
+   * @param destDate  the date to which events will be copied
    * @return the number of events successfully copied
    */
   public int copyEventsOnDateToCalendar(LocalDate srcDate, String targetCal, LocalDate destDate) {
@@ -220,9 +220,9 @@ public class CalendarLibrary implements ICalendarLibrary {
    *
    * @param sourceCalendarName name of the source calendar
    * @param targetCalendarName name of the target calendar
-   * @param startDate starting date of the source range (inclusive)
-   * @param endDate ending date of the source range (inclusive)
-   * @param targetDate starting date in the target calendar where events will be shifted to
+   * @param startDate          starting date of the source range (inclusive)
+   * @param endDate            ending date of the source range (inclusive)
+   * @param targetDate         starting date in the target calendar where events will be shifted to
    * @return the number of events successfully copied
    * @throws IllegalArgumentException if calendars are not found or arguments are invalid
    */
