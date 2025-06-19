@@ -5,10 +5,14 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
+import calendar.model.CalendarLibrary;
 import calendar.model.CalendarModel;
 import calendar.model.Event;
+import calendar.model.ICalendarLibrary;
+import calendar.model.ICalendarModel;
 import calendar.model.IEvent;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +36,7 @@ public class CalendarModelTest {
 
   @Before
   public void setUp() {
-    model = new CalendarModel();
+    model = new CalendarModel(ZoneId.of("America/New_York"));
     LocalDateTime start1 = LocalDateTime.of(2025, 6, 10, 9, 0);
     LocalDateTime end1 = LocalDateTime.of(2025, 6, 10, 10, 0);
     e1 = new Event("Meeting", start1, end1);
@@ -129,4 +133,23 @@ public class CalendarModelTest {
     model.addEvent(e1);
     assertFalse(model.hasConflict(eOverlap));
   }
+
+  @Test
+  public void testAddAndRetrieveSingleEvent() {
+    ICalendarLibrary library = new CalendarLibrary();
+    library.createCalendar("Work", "America/New_York");
+    library.useCalendar("Work");
+
+    ICalendarModel model = library.getActiveCalendar();
+
+    LocalDateTime start = LocalDateTime.of(2025, 7, 1, 9, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 7, 1, 10, 0);
+    Event event = new Event("Meeting", start, end);
+    model.addEvent(event);
+
+    List<IEvent> events = model.getEventsOnDate(LocalDate.of(2025, 7, 1));
+    assertEquals(1, events.size());
+    assertEquals("Meeting", events.get(0).getSubject());
+  }
+
 }

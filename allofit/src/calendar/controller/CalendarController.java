@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -14,7 +16,6 @@ import java.util.Scanner;
 import java.util.Set;
 import javax.swing.SwingUtilities;
 
-import calendar.model.CalendarLibrary;
 import calendar.gui.ICalendarGUIView;
 import calendar.gui.CalendarGUIView;
 import calendar.model.Event;
@@ -201,22 +202,40 @@ public class CalendarController implements ICalendarController {
    * @param command the input string for creating an all-day event
    */
   private void handlePrintEvents(String command) {
+    ZoneId currentTimezone = library.getActiveCalendar().getTimezone();
+    List<String> formattedOutput = new ArrayList<>();
+
     if (command.contains(" on ")) {
       String dateStr = command.substring(command.indexOf(" on ") + 4).trim();
       LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
       List<IEvent> events = library.getActiveCalendar().getEventsOnDate(date);
-      List<IEvent> eventList = new ArrayList<>(events);
-      view.displayEvents(eventList);
-    } else if (command.contains(" from ")) {
-      String range = command.substring(command.indexOf(" from ") + 6);
-      String[] parts = range.split(" to ");
-      LocalDateTime start = parseDateTime(parts[0].trim());
-      LocalDateTime end = parseDateTime(parts[1].trim());
-      List<IEvent> events = library.getActiveCalendar().getEventsWithinDates(start, end);
-      List<IEvent> eventList = new ArrayList<>(events);
-      view.displayEvents(eventList);
+
+      if (events.isEmpty()) {
+        formattedOutput.add("No events on " + dateStr);
+      } else {
+        for (IEvent e : events) {
+          ZoneId creationTimezone = library.getActiveCalendar().getCreationTimezone();
+
+          ZonedDateTime originalStart = e.getStart().atZone(creationTimezone);
+          ZonedDateTime zonedStart = originalStart.withZoneSameInstant(currentTimezone);
+
+          ZonedDateTime originalEnd = e.getEnd().atZone(creationTimezone);
+          ZonedDateTime zonedEnd = originalEnd.withZoneSameInstant(currentTimezone);
+
+          String eventStr = "• \"" + e.getSubject() + "\" ("
+                  + zonedStart.toLocalDate() + " "
+                  + String.format("%02d:%02d", zonedStart.getHour(), zonedStart.getMinute())
+                  + " - "
+                  + String.format("%02d:%02d", zonedEnd.getHour(), zonedEnd.getMinute())
+                  + ")";
+          formattedOutput.add(eventStr);
+        }
+      }
     }
+
+    view.displayFormattedEvents(formattedOutput);
   }
+
 
   /**
    * Creates a timed event with specific start and end times.
@@ -428,6 +447,7 @@ public class CalendarController implements ICalendarController {
    * @param command the user's edit command
    */
   private void handleEditEvent(String command) {
+    System.out.println("DEBUG: Timezone-aware handlePrintEvents() called.");
     EditCommand editCmd = parseEditCommand(command);
 
     IEvent matchingEvent = library.getActiveCalendar().findEvent(editCmd.subject, editCmd.fromDateTime);
@@ -640,30 +660,6 @@ public class CalendarController implements ICalendarController {
       }
     }
     return days;
-  }
-
-  /**
-   * Extracts quoted subject name from the input string.
-   * And handles unquoted words.
-   *
-   * @param input the raw input string after "create event"
-   * @return the parsed subject string including quotes
-   */
-  private String extractQuotedSubject(String input) {
-    if (input.startsWith("\"")) {
-      int endQuote = input.indexOf("\"", 1);
-      if (endQuote == -1) {
-        throw new IllegalArgumentException("Unclosed quote in subject");
-      }
-      return input.substring(1, endQuote);
-    } else {
-      int space = input.indexOf(" ");
-      if (space == -1) {
-        return input;
-      } else {
-        return input.substring(0, space);
-      }
-    }
   }
 
   /**

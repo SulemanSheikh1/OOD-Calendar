@@ -48,7 +48,7 @@ public class CalendarLibrary implements ICalendarLibrary {
       throw new IllegalArgumentException("Invalid timezone: " + timezoneString);
     }
 
-    calendars.put(name, new CalendarModel());
+    calendars.put(name, new CalendarModel(zone));
     calendarTimezones.put(name, zone);
   }
 
@@ -102,43 +102,23 @@ public class CalendarLibrary implements ICalendarLibrary {
    */
   public void editCalendar(String name, String property, String newValue) {
     if (!calendars.containsKey(name)) {
-      throw new IllegalArgumentException("Calendar not found.");
+      throw new IllegalArgumentException("No such calendar: " + name);
     }
-
-    if (property.equalsIgnoreCase("name")) {
+    ICalendarModel model = calendars.get(name);
+    if (property.equals("name")) {
       if (calendars.containsKey(newValue)) {
-        throw new IllegalArgumentException("New calendar name already exists.");
+        throw new IllegalArgumentException("Calendar with name already exists: " + newValue);
       }
-      calendars.put(newValue, calendars.remove(name));
-      ZoneId zone = calendarTimezones.remove(name);
-      calendarTimezones.put(newValue, zone);
-      if (name.equals(currentCalendar)) {
+      calendars.remove(name);
+      calendars.put(newValue, model);
+      if (currentCalendar != null && currentCalendar.equals(name)) {
         currentCalendar = newValue;
       }
-    } else if (property.equalsIgnoreCase("timezone")) {
-      ZoneId oldZone = calendarTimezones.get(name);
-      ZoneId newZone;
-      try {
-        newZone = ZoneId.of(newValue);
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Invalid timezone: " + newValue);
-      }
-
-      ICalendarModel model = calendars.get(name);
-      for (IEvent event : model.getEvents()) {
-        ZonedDateTime oldStartZoned = event.getStart().atZone(oldZone);
-        ZonedDateTime newStartZoned = oldStartZoned.withZoneSameInstant(newZone);
-        event.setStart(newStartZoned.toLocalDateTime());
-
-        ZonedDateTime oldEndZoned = event.getEnd().atZone(oldZone);
-        ZonedDateTime newEndZoned = oldEndZoned.withZoneSameInstant(newZone);
-        event.setEnd(newEndZoned.toLocalDateTime());
-      }
-
-      // Update calendar timezone
-      calendarTimezones.put(name, newZone);
+    } else if (property.equals("timezone")) {
+      ZoneId zone = ZoneId.of(newValue);
+      model.setTimezone(zone);
     } else {
-      throw new IllegalArgumentException("Unsupported calendar property: " + property);
+      throw new IllegalArgumentException("Unknown property: " + property);
     }
   }
 
@@ -187,7 +167,7 @@ public class CalendarLibrary implements ICalendarLibrary {
 
     IEvent shifted = original.copyWithNewTime(dest.atZone(targetZone)
             .withZoneSameInstant(sourceZone).toLocalDateTime());
-    if (target.hasConflict((Event) shifted)) {
+    if (target.hasConflict(shifted)) {
       return false;
     }
 
@@ -223,7 +203,7 @@ public class CalendarLibrary implements ICalendarLibrary {
 
       IEvent shifted = e.copyWithNewTime(destStart.atZone(sourceZone)
               .withZoneSameInstant(targetZone).toLocalDateTime());
-      if (!target.hasConflict((Event) shifted)) {
+      if (!target.hasConflict(shifted)) {
         target.addEvent(shifted);
         copied++;
       }

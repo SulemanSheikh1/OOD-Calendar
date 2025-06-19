@@ -1,19 +1,12 @@
 package calendar.view;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-
-import calendar.model.Event;
-import calendar.model.IEvent;
 
 /**
  * This class handles all user outputs in the calendar.
  * It displays welcome messages, help menus, and formatted event details.
  */
 public class CalendarView implements ICalendarView {
-  private static final DateTimeFormatter DATE_TIME_FORMATTER =
-          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
   /**
    * Displays the welcome message.
@@ -54,71 +47,6 @@ public class CalendarView implements ICalendarView {
     System.out.println("  exit - Exit the application");
   }
 
-  /**
-   * Displays a list of events.
-   *
-   * @param events the list of events
-   */
-  public void displayEvents(List<IEvent> events) {
-    if (events.isEmpty()) {
-      System.out.println("No events found");
-      return;
-    }
-
-    System.out.println("\nEvents:");
-    for (IEvent event : events) {
-      System.out.println(formatEvent(event));
-    }
-  }
-
-  /**
-   * Displays a single event.
-   *
-   * @param event the event.
-   */
-  public void displayEvent(IEvent event) {
-    System.out.println("\nEvent details:");
-    System.out.println(formatEvent(event));
-  }
-
-  /**
-   * Returns a string describing an event, which shows the subject,
-   * time range, location, description, and status.
-   *
-   * @param event the event.
-   * @return a string of event details
-   */
-  private String formatEvent(IEvent event) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("• \"").append(event.getSubject()).append("\"");
-    sb.append(" (").append(formatDateTime(event.getStart()));
-    sb.append(" - ").append(formatDateTime(event.getEnd())).append(")");
-
-    if (!event.getLocation().isEmpty()) {
-      sb.append(" @ ").append(event.getLocation());
-    }
-
-    if (!event.getDescription().isEmpty()) {
-      sb.append("\n  Description: ").append(event.getDescription());
-    }
-
-    if (!event.getStatus().isEmpty()) {
-      sb.append("\n  Status: ").append(event.getStatus());
-    }
-
-    return sb.toString();
-  }
-
-  /**
-   * Formats a LocalDateTime into a string.
-   *
-   * @param dateTime the date and time
-   * @return the formatted string
-   */
-  public String formatDateTime(LocalDateTime dateTime) {
-    return dateTime.format(DATE_TIME_FORMATTER);
-  }
-
   @Override
   public void displayMessage(String message) {
     System.out.println(message);
@@ -129,5 +57,10 @@ public class CalendarView implements ICalendarView {
     System.out.println("Error: " + error);
   }
 
-
+  @Override
+  public void displayFormattedEvents(List<String> eventStrings) {
+    for (String s : eventStrings) {
+      System.out.println(s);
+    }
+  }
 }

@@ -1,5 +1,6 @@
 package calendar.model;
 
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,13 +14,20 @@ import java.util.UUID;
  */
 public class CalendarModel implements ICalendarModel {
   private final List<IEvent> events;
+  private ZoneId timezone;
+  private final ZoneId creationTimezone;
+
 
   /**
-   * Constructs an empty calendar.
+   * Makes a new Calendar with a specific timezone.
+   * @param timezone the current timezone we are in
    */
-  public CalendarModel() {
-    events = new ArrayList<>();
+  public CalendarModel(ZoneId timezone) {
+    this.timezone = timezone;
+    this.creationTimezone = timezone;
+    this.events = new ArrayList<>();
   }
+
 
   /**
    * Add events to the calendar.
@@ -208,7 +216,7 @@ public class CalendarModel implements ICalendarModel {
                                  DateTimeFormatter formatter) {
     IEvent modified = createModifiedEvent((Event) event, property, newValue, formatter);
 
-    if (hasConflict((Event) modified)) {
+    if (hasConflict(modified)) {
       return false;
     }
 
@@ -331,4 +339,21 @@ public class CalendarModel implements ICalendarModel {
 
     return count;
   }
+
+  @Override
+  public ZoneId getTimezone() {
+    return timezone;
+  }
+
+  @Override
+  public void setTimezone(ZoneId timezone) {
+    this.timezone = timezone;
+  }
+
+  @Override
+  public ZoneId getCreationTimezone() {
+    return creationTimezone;
+  }
+
+
 }

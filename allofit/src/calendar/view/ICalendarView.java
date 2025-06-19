@@ -1,10 +1,6 @@
 package calendar.view;
 
-import java.time.LocalDateTime;
 import java.util.List;
-
-import calendar.model.Event;
-import calendar.model.IEvent;
 
 /**
  * This interface handles all user outputs in the calendar.
@@ -24,28 +20,6 @@ public interface ICalendarView {
   void displayHelp();
 
   /**
-   * Displays a list of events.
-   *
-   * @param events the list of events
-   */
-  void displayEvents(List<IEvent> events);
-
-  /**
-   * Displays a single event.
-   *
-   * @param event the event.
-   */
-  void displayEvent(IEvent event);
-
-  /**
-   * Formats a LocalDateTime into a string.
-   *
-   * @param dateTime the date and time
-   * @return the formatted string
-   */
-  String formatDateTime(LocalDateTime dateTime);
-
-  /**
    * Displays a general success or info message to the user.
    *
    * @param message the message to display
@@ -58,5 +32,13 @@ public interface ICalendarView {
    * @param error the error message to display
    */
   void displayError(String error);
+
+  /**
+   * Displays a list of event strings.
+   *
+   * @param eventStrings formatted event descriptions
+   */
+  void displayFormattedEvents(List<String> eventStrings);
+
 
 }

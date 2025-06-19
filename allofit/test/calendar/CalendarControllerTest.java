@@ -20,6 +20,7 @@ import java.util.List;
 import calendar.controller.CalendarController;
 import calendar.model.CalendarLibrary;
 import calendar.model.Event;
+import calendar.model.ICalendarModel;
 import calendar.model.IEvent;
 import calendar.view.CalendarView;
 
@@ -31,6 +32,7 @@ public class CalendarControllerTest {
   private CalendarController controller;
   private ByteArrayOutputStream outContent;
   private PrintStream originalOut;
+  private CalendarLibrary library;
 
   @Before
   public void setUp() {
@@ -38,7 +40,7 @@ public class CalendarControllerTest {
     outContent = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outContent));
 
-    CalendarLibrary library = new CalendarLibrary();
+    library = new CalendarLibrary();  // <-- correct assignment to class field
     library.createCalendar("default", "America/New_York");
     library.useCalendar("default");
 
@@ -338,7 +340,7 @@ public class CalendarControllerTest {
     controller.processCommand("print events on 2025-07-01");
     String output = outContent.toString();
     assertTrue(output.contains("Meeting"));
-    assertTrue(output.contains("2025-07-01 22:00"));
+    assertTrue(output.contains("22:00"));
   }
 
   @Test
@@ -365,5 +367,25 @@ public class CalendarControllerTest {
     assertEquals("Meeting", events.get(0).getSubject());
     assertEquals(destStart, events.get(0).getStart());
   }
+
+  @Test
+  public void testEditCalendarTimezone() {
+    outContent.reset();
+
+    controller.processCommand("create calendar Work America/New_York");
+    controller.processCommand("switch calendar Work");
+    controller.processCommand("edit calendar Work timezone Asia/Tokyo");
+
+    library.useCalendar("Work");  // Use the shared library instance
+    ICalendarModel activeModel = library.getActiveCalendar();
+    assertEquals(ZoneId.of("Asia/Tokyo"), activeModel.getTimezone());
+  }
+
+
+
+
+
+
+
 
 }

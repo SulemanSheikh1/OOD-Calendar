@@ -2,6 +2,7 @@ package calendar.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -85,7 +86,7 @@ public interface ICalendarModel {
    *
    * @return list of all events
    */
-  public List<IEvent> getEvents();
+  List<IEvent> getEvents();
 
   /**
    * Edits a single event by creating a modified copy with one updated property.
@@ -97,7 +98,7 @@ public interface ICalendarModel {
    * @param formatter the formatter to parse new date/time values if needed
    * @return true if the event was successfully edited; false if there was a conflict
    */
-  public boolean editSingleEvent(IEvent event, String property, String newValue,
+  boolean editSingleEvent(IEvent event, String property, String newValue,
                                  DateTimeFormatter formatter);
 
   /**
@@ -112,7 +113,7 @@ public interface ICalendarModel {
    * @param formatter the formatter to parse date/time values
    * @return the number of events successfully modified
    */
-  public int editFutureEvents(IEvent event, String property, String newValue,
+  int editFutureEvents(IEvent event, String property, String newValue,
                               DateTimeFormatter formatter);
 
   /**
@@ -142,4 +143,22 @@ public interface ICalendarModel {
    */
   IEvent createModifiedEvent(Event base, String property, String newValue,
                                     DateTimeFormatter formatter);
+
+  /**
+   * Get the timezone of this calendar.
+   * @return the ZoneId representing this calendar's timezone
+   */
+  ZoneId getTimezone();
+
+  /**
+   * Set the timezone of this calendar.
+   * @param timezone the new timezone to set
+   */
+  void setTimezone(ZoneId timezone);
+
+  /**
+   * Get the timezone in the creation of this calendar.
+   * @return ZoneId representing the timezone in the creation of this calendar.
+   */
+  ZoneId getCreationTimezone();
 }
