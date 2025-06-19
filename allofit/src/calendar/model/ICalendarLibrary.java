@@ -3,6 +3,7 @@ package calendar.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,7 +35,7 @@ public interface ICalendarLibrary {
    * @return the CalendarModel in use
    * @throws IllegalStateException if no calendar has been selected
    */
-  CalendarModel getActiveCalendar();
+  ICalendarModel getActiveCalendar();
 
   /**
    * Returns the timezone of the currently active calendar.
@@ -88,18 +89,23 @@ public interface ICalendarLibrary {
   int copyEventsOnDateToCalendar(LocalDate srcDate, String targetCal, LocalDate destDate);
 
   /**
-   * Copies all events within a date/time range from the active calendar
-   * to another calendar, starting at a given destination start time and
-   * preserving the original time gaps, adjusting for timezones.
+   * Copies all events from the source calendar to the target calendar that occur within
+   * the specified date range (inclusive of both start and end dates).
+   * The copied events are shifted relative to the target date to preserve their relative
+   * positions in the range. Timezone conversion is applied based on each calendar's timezone.
    *
-   * @param start      the start of the source range
-   * @param end        the end of the source range
-   * @param targetCal  the name of the calendar to copy to
-   * @param destStart  the start time for the first copied event in the target calendar
-   * @return the number of events successfully copied
+   * @param sourceCalendarName name of the source calendar
+   * @param targetCalendarName name of the target calendar
+   * @param startDate starting date of the source range (inclusive)
+   * @param endDate ending date of the source range (inclusive)
+   * @param targetDate starting date in the target calendar where events will be shifted to
+   * @throws IllegalArgumentException if calendars are not found or arguments are invalid
    */
-  int copyEventsBetweenDatesToCalendar(LocalDateTime start, LocalDateTime end,
-                                       String targetCal, LocalDateTime destStart);
+  int copyEventsBetweenDatesToCalendar(String sourceCalendarName,
+                                       String targetCalendarName,
+                                       LocalDate startDate,
+                                       LocalDate endDate,
+                                       LocalDate targetDate);
 
   /**
    * Lists all existing calendar names.

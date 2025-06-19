@@ -2,7 +2,9 @@ package calendar.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +16,7 @@ import java.util.Set;
  * events across calendars.
  */
 public class CalendarLibrary implements ICalendarLibrary {
-  private final Map<String, CalendarModel> calendars;
+  private final Map<String, ICalendarModel> calendars;
   private final Map<String, ZoneId> calendarTimezones;
   private String currentCalendar;
 
@@ -69,7 +71,7 @@ public class CalendarLibrary implements ICalendarLibrary {
    * @return the active CalendarModel
    * @throws IllegalStateException if no calendar is currently in use
    */
-  public CalendarModel getActiveCalendar() {
+  public ICalendarModel getActiveCalendar() {
     if (currentCalendar == null) {
       throw new IllegalStateException("No calendar in use.");
     }
@@ -114,13 +116,27 @@ public class CalendarLibrary implements ICalendarLibrary {
         currentCalendar = newValue;
       }
     } else if (property.equalsIgnoreCase("timezone")) {
-      ZoneId zone;
+      ZoneId oldZone = calendarTimezones.get(name);
+      ZoneId newZone;
       try {
-        zone = ZoneId.of(newValue);
+        newZone = ZoneId.of(newValue);
       } catch (Exception e) {
         throw new IllegalArgumentException("Invalid timezone: " + newValue);
       }
-      calendarTimezones.put(name, zone);
+
+      ICalendarModel model = calendars.get(name);
+      for (IEvent event : model.getEvents()) {
+        ZonedDateTime oldStartZoned = event.getStart().atZone(oldZone);
+        ZonedDateTime newStartZoned = oldStartZoned.withZoneSameInstant(newZone);
+        event.setStart(newStartZoned.toLocalDateTime());
+
+        ZonedDateTime oldEndZoned = event.getEnd().atZone(oldZone);
+        ZonedDateTime newEndZoned = oldEndZoned.withZoneSameInstant(newZone);
+        event.setEnd(newEndZoned.toLocalDateTime());
+      }
+
+      // Update calendar timezone
+      calendarTimezones.put(name, newZone);
     } else {
       throw new IllegalArgumentException("Unsupported calendar property: " + property);
     }
@@ -159,8 +175,8 @@ public class CalendarLibrary implements ICalendarLibrary {
       return false;
     }
 
-    CalendarModel source = getActiveCalendar();
-    CalendarModel target = calendars.get(targetCal);
+    ICalendarModel source = getActiveCalendar();
+    ICalendarModel target = calendars.get(targetCal);
     ZoneId sourceZone = getActiveTimezone();
     ZoneId targetZone = calendarTimezones.get(targetCal);
 
@@ -192,8 +208,8 @@ public class CalendarLibrary implements ICalendarLibrary {
       return 0;
     }
 
-    CalendarModel source = getActiveCalendar();
-    CalendarModel target = calendars.get(targetCal);
+    ICalendarModel source = getActiveCalendar();
+    ICalendarModel target = calendars.get(targetCal);
     ZoneId sourceZone = getActiveTimezone();
     ZoneId targetZone = calendarTimezones.get(targetCal);
 
@@ -217,38 +233,66 @@ public class CalendarLibrary implements ICalendarLibrary {
   }
 
   /**
-   * Copies all events within a specified date/time range to another calendar.
+   * Copies all events from the source calendar to the target calendar that occur within
+   * the specified date range (inclusive of both start and end dates).
+   * The copied events are shifted relative to the target date to preserve their relative
+   * positions in the range. Timezone conversion is applied based on each calendar's timezone.
    *
-   * @param start the start datetime of the source range
-   * @param end the end datetime of the source range
-   * @param targetCal the name of the target calendar
-   * @param destStart the starting datetime in the target calendar
+   * @param sourceCalendarName name of the source calendar
+   * @param targetCalendarName name of the target calendar
+   * @param startDate starting date of the source range (inclusive)
+   * @param endDate ending date of the source range (inclusive)
+   * @param targetDate starting date in the target calendar where events will be shifted to
    * @return the number of events successfully copied
+   * @throws IllegalArgumentException if calendars are not found or arguments are invalid
    */
-  public int copyEventsBetweenDatesToCalendar(LocalDateTime start, LocalDateTime end,
-                                              String targetCal, LocalDateTime destStart) {
-    if (currentCalendar == null || !calendars.containsKey(targetCal)) {
-      return 0;
+  @Override
+  public int copyEventsBetweenDatesToCalendar(
+          String sourceCalendarName,
+          String targetCalendarName,
+          LocalDate startDate,
+          LocalDate endDate,
+          LocalDate targetDate) {
+
+    if (!calendars.containsKey(sourceCalendarName)) {
+      throw new IllegalArgumentException("Source calendar not found: " + sourceCalendarName);
+    }
+    if (!calendars.containsKey(targetCalendarName)) {
+      throw new IllegalArgumentException("Target calendar not found: " + targetCalendarName);
     }
 
-    CalendarModel source = getActiveCalendar();
-    CalendarModel target = calendars.get(targetCal);
-    ZoneId sourceZone = getActiveTimezone();
-    ZoneId targetZone = calendarTimezones.get(targetCal);
+    ICalendarModel sourceCalendar = calendars.get(sourceCalendarName);
+    ICalendarModel targetCalendar = calendars.get(targetCalendarName);
 
-    List<IEvent> events = source.getEventsWithinDates(start, end);
+    ZoneId sourceZone = calendarTimezones.get(sourceCalendarName);
+    ZoneId targetZone = calendarTimezones.get(targetCalendarName);
+
     int copied = 0;
 
-    for (IEvent e : events) {
-      long shiftMinutes = java.time.Duration.between(start, e.getStart()).toMinutes();
-      LocalDateTime shiftedStart = destStart.plusMinutes(shiftMinutes);
+    for (IEvent event : sourceCalendar.getEvents()) {
+      LocalDate eventDate = event.getStart().toLocalDate();
 
-      IEvent newEvent = e.copyWithNewTime(shiftedStart.atZone(sourceZone)
-              .withZoneSameInstant(targetZone).toLocalDateTime());
+      if (!eventDate.isBefore(startDate) && !eventDate.isAfter(endDate)) {
+        long dayOffset = startDate.until(eventDate).getDays();
+        LocalDate mappedDate = targetDate.plusDays(dayOffset);
 
-      if (!target.hasConflict((Event) newEvent)) {
-        target.addEvent(newEvent);
-        copied++;
+        ZonedDateTime sourceStartZoned = event.getStart().atZone(sourceZone);
+        ZonedDateTime sourceEndZoned = event.getEnd().atZone(sourceZone);
+
+        LocalTime startTime = sourceStartZoned.toLocalTime();
+        LocalTime endTime = sourceEndZoned.toLocalTime();
+
+        ZonedDateTime targetStartZoned = ZonedDateTime.of(mappedDate, startTime, targetZone);
+        ZonedDateTime targetEndZoned = ZonedDateTime.of(mappedDate, endTime, targetZone);
+
+        Event copiedEvent = new Event(event.getSubject(),
+                targetStartZoned.toLocalDateTime(),
+                targetEndZoned.toLocalDateTime());
+
+        if (!targetCalendar.hasConflict(copiedEvent)) {
+          targetCalendar.addEvent(copiedEvent);
+          copied++;
+        }
       }
     }
 

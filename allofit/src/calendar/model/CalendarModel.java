@@ -2,6 +2,7 @@ package calendar.model;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -131,7 +132,7 @@ public class CalendarModel implements ICalendarModel {
    * @param e the Event to check
    * @return true if there is already an event equal to `e`; false otherwise
    */
-  public boolean hasConflict(Event e) {
+  public boolean hasConflict(IEvent e) {
     for (IEvent existing : events) {
       if (existing.equals(e)) {
         return true;
@@ -151,9 +152,9 @@ public class CalendarModel implements ICalendarModel {
    * @return a brand‐new Event reflecting the single change
    * @throws IllegalArgumentException if property is unrecognized or newValue is badly formatted
    */
-  public Event createModifiedEvent(Event base, String property, String newValue,
+  public IEvent createModifiedEvent(Event base, String property, String newValue,
                                    DateTimeFormatter formatter) {
-    Event copy = new Event(
+    IEvent copy = new Event(
             base.getSubject(),
             base.getStart(),
             base.getEnd(),
@@ -205,14 +206,13 @@ public class CalendarModel implements ICalendarModel {
    */
   public boolean editSingleEvent(IEvent event, String property, String newValue,
                                  DateTimeFormatter formatter) {
-    Event base = (Event) event;
-    Event modified = createModifiedEvent(base, property, newValue, formatter);
+    IEvent modified = createModifiedEvent((Event) event, property, newValue, formatter);
 
-    if (hasConflict(modified)) {
+    if (hasConflict((Event) modified)) {
       return false;
     }
 
-    removeEvent(base);
+    removeEvent(event);
     addEvent(modified);
     return true;
   }
@@ -236,7 +236,11 @@ public class CalendarModel implements ICalendarModel {
     UUID seriesId = base.getSeriesId();
     if (seriesId == null) {
       boolean success = editSingleEvent(event, property, newValue, formatter);
-      return success ? 1 : 0;
+      if (success) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
 
     LocalDateTime baseStart = base.getStart();
@@ -248,7 +252,7 @@ public class CalendarModel implements ICalendarModel {
       if (ev.getSeriesId() != null
               && ev.getSeriesId().equals(seriesId)
               && !ev.getStart().isBefore(baseStart)) {
-        Event modified = createModifiedEvent(ev, property, newValue, formatter);
+        Event modified = (Event) createModifiedEvent(ev, property, newValue, formatter);
         if (!hasConflict(modified)) {
           removeEvent(ev);
           addEvent(modified);
@@ -259,6 +263,32 @@ public class CalendarModel implements ICalendarModel {
 
     return count;
   }
+
+  @Override
+  public List<IEvent> getEventsFromDate(LocalDate date) {
+    List<IEvent> matching = new ArrayList<>();
+    for (IEvent event : events) {
+      if (!event.getStart().toLocalDate().isBefore(date)) {
+        matching.add(event);
+      }
+    }
+    matching.sort(Comparator.comparing(IEvent::getStart));
+    if (matching.size() > 10) {
+      return matching.subList(0, 10);
+    }
+    return matching;
+  }
+
+  /**
+   * Returns all events in this calendar.
+   *
+   * @return list of all events
+   */
+  public List<IEvent> getEvents() {
+    return new ArrayList<>(events);
+  }
+
+
 
   /**
    * Edits all events in the recurring series to which the given event belongs.
@@ -273,12 +303,15 @@ public class CalendarModel implements ICalendarModel {
    */
   public int editWholeSeries(IEvent event, String property, String newValue,
                              DateTimeFormatter formatter) {
-    Event base = (Event) event;
 
-    UUID seriesId = base.getSeriesId();
+    UUID seriesId = event.getSeriesId();
     if (seriesId == null) {
       boolean success = editSingleEvent(event, property, newValue, formatter);
-      return success ? 1 : 0;
+      if (success) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
 
     List<IEvent> allEvents = getEventsWithinDates(LocalDateTime.MIN, LocalDateTime.MAX);
@@ -287,7 +320,7 @@ public class CalendarModel implements ICalendarModel {
     for (IEvent e : allEvents) {
       Event ev = (Event) e;
       if (ev.getSeriesId() != null && ev.getSeriesId().equals(seriesId)) {
-        Event modified = createModifiedEvent(ev, property, newValue, formatter);
+        Event modified = (Event) createModifiedEvent(ev, property, newValue, formatter);
         if (!hasConflict(modified)) {
           removeEvent(ev);
           addEvent(modified);

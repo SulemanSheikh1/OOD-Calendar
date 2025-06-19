@@ -12,13 +12,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 
 import calendar.model.CalendarLibrary;
-import calendar.view.CalendarGUIView;
+import calendar.gui.ICalendarGUIView;
+import calendar.gui.CalendarGUIView;
 import calendar.model.Event;
 import calendar.model.EventSeries;
+import calendar.model.ICalendarLibrary;
 import calendar.model.IEvent;
 import calendar.view.ICalendarView;
 
@@ -26,13 +27,13 @@ import calendar.view.ICalendarView;
  * Class that represents the controller for the calendar.
  */
 public class CalendarController implements ICalendarController {
-  private final CalendarLibrary library;
+  private final ICalendarLibrary library;
   private final ICalendarView view;
-  private CalendarGUIView guiView;
+  private ICalendarGUIView guiView;
   private static final DateTimeFormatter DATE_TIME_FORMAT =
           DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
-  public CalendarController(CalendarLibrary library, ICalendarView view) {
+  public CalendarController(ICalendarLibrary library, ICalendarView view) {
     this.library = library;
     this.view = view;
   }
@@ -61,23 +62,25 @@ public class CalendarController implements ICalendarController {
   /**
    * Runs the calendar in interactive mode, reading commands from stdin.
    */
+  @Override
   public void runInteractive() {
-    Scanner sc = new Scanner(System.in);
+    Scanner scanner = new Scanner(System.in);
     view.displayWelcomeMessage();
     while (true) {
       System.out.print("> ");
-      String line = sc.nextLine().trim();
-      if (line.equalsIgnoreCase("exit")) {
+      String input = scanner.nextLine().trim();
+      if (input.equalsIgnoreCase("exit")) {
         break;
-      }
-      try {
-        processCommand(line);
-      } catch (IllegalArgumentException e) {
-        // should never run
+      } else if (input.equalsIgnoreCase("help")) {
+        view.displayHelp();
+      } else {
+        processCommand(input);
       }
     }
-    sc.close();
   }
+
+
+
 
   /**
    * Starts the interactive mode for user input in a loop.
@@ -127,8 +130,25 @@ public class CalendarController implements ICalendarController {
     }
     String lower = command.toLowerCase();
     if (lower.startsWith("create calendar ")) {
-      handleCreateCalendar(command);
-    } else if (lower.startsWith("edit calendar ")) {
+      if (lower.contains("--name") && lower.contains("--timezone")) {
+        handleCreateCalendarWithFlags(command);
+      } else {
+        handleCreateCalendar(command);
+      }
+      return;
+    }
+
+    // Handle "use calendar" as alias for switch calendar with --name flag
+    if (lower.startsWith("use calendar ")) {
+      if (lower.contains("--name")) {
+        handleUseCalendarWithFlags(command);
+        return;
+      } else {
+        throw new IllegalArgumentException("Unrecognized command: " + command);
+      }
+    }
+
+    if (lower.startsWith("edit calendar ")) {
       handleEditCalendar(command);
     } else if (lower.startsWith("create")) {
       handleCreateEvent(command);
@@ -185,10 +205,7 @@ public class CalendarController implements ICalendarController {
       String dateStr = command.substring(command.indexOf(" on ") + 4).trim();
       LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
       List<IEvent> events = library.getActiveCalendar().getEventsOnDate(date);
-      List<Event> eventList = new ArrayList<>();
-      for (IEvent event : events) {
-        eventList.add((Event) event);
-      }
+      List<IEvent> eventList = new ArrayList<>(events);
       view.displayEvents(eventList);
     } else if (command.contains(" from ")) {
       String range = command.substring(command.indexOf(" from ") + 6);
@@ -196,10 +213,7 @@ public class CalendarController implements ICalendarController {
       LocalDateTime start = parseDateTime(parts[0].trim());
       LocalDateTime end = parseDateTime(parts[1].trim());
       List<IEvent> events = library.getActiveCalendar().getEventsWithinDates(start, end);
-      List<Event> eventList = new ArrayList<>();
-      for (IEvent event : events) {
-        eventList.add((Event) event);
-      }
+      List<IEvent> eventList = new ArrayList<>(events);
       view.displayEvents(eventList);
     }
   }
@@ -241,7 +255,7 @@ public class CalendarController implements ICalendarController {
       }
       library.getActiveCalendar().addEvent(event);
       if (guiView != null) {
-        guiView.displayEvents(List.of(event));
+        guiView.showEvents(List.of(event));
       } else {
         System.out.println("Created timed event: \"" + subject + "\"");
       }
@@ -310,12 +324,15 @@ public class CalendarController implements ICalendarController {
     }
   }
 
-  /**
-   * Handles edit commands like editing a single event, future events, or an entire series.
-   *
-   * @param command the user's edit command
-   */
-  private void handleEditEvent(String command) {
+  private static class EditCommand {
+    String editType;
+    String property;
+    String subject;
+    LocalDateTime fromDateTime;
+    String newValue;
+  }
+
+  private EditCommand parseEditCommand(String command) {
     String[] parts = command.split(" ");
     if (parts.length < 4) {
       throw new IllegalArgumentException("Invalid edit command. "
@@ -323,34 +340,29 @@ public class CalendarController implements ICalendarController {
               + "from <start> with <newValue>");
     }
 
-    String editType;
+    EditCommand result = new EditCommand();
+
+    // Determine edit type
     if (parts[0].equalsIgnoreCase("edits")) {
-      editType = "edits";
-    } else if (parts[0].equalsIgnoreCase("edit") && parts[1]
-            .equalsIgnoreCase("series")) {
-      editType = "edit series";
+      result.editType = "edits";
+    } else if (parts[0].equalsIgnoreCase("edit") && parts[1].equalsIgnoreCase("series")) {
+      result.editType = "edit series";
     } else if (parts[0].equalsIgnoreCase("edit")) {
-      editType = "edit";
+      result.editType = "edit";
     } else {
       throw new IllegalArgumentException("Invalid edit type: " + parts[0]);
     }
 
-    int idx;
-    if (editType.equals("edits")) {
-      idx = 1;
-    } else if (editType.equals("edit series")) {
-      idx = 2;
-    } else {
-      idx = 1;
-    }
+    int idx = (result.editType.equals("edit series")) ? 2 : 1;
 
-    String property = parts[idx].toLowerCase();
-    if (!property.matches("subject|start|end|location|description|status")) {
-      throw new IllegalArgumentException("Invalid property: " + property);
+    // Property
+    result.property = parts[idx].toLowerCase();
+    if (!result.property.matches("subject|start|end|location|description|status")) {
+      throw new IllegalArgumentException("Invalid property: " + result.property);
     }
     idx++;
 
-    String eventSubject;
+    // Subject
     if (parts[idx].startsWith("\"")) {
       StringBuilder sbSubject = new StringBuilder();
       String piece = parts[idx];
@@ -369,11 +381,10 @@ public class CalendarController implements ICalendarController {
         piece = parts[idx];
         sbSubject.append(" ").append(piece, 0, piece.length() - 1);
       }
-      eventSubject = sbSubject.toString();
-
+      result.subject = sbSubject.toString();
       idx++;
     } else {
-      eventSubject = parts[idx];
+      result.subject = parts[idx];
       idx++;
     }
 
@@ -385,9 +396,8 @@ public class CalendarController implements ICalendarController {
     if (idx >= parts.length) {
       throw new IllegalArgumentException("Missing start date/time in edit command.");
     }
-    LocalDateTime fromDateTime;
     try {
-      fromDateTime = LocalDateTime.parse(parts[idx], DATE_TIME_FORMAT);
+      result.fromDateTime = LocalDateTime.parse(parts[idx], DATE_TIME_FORMAT);
     } catch (DateTimeParseException ex) {
       throw new IllegalArgumentException("Invalid date/time format; expected YYYY-MM-DDThh:mm");
     }
@@ -405,28 +415,42 @@ public class CalendarController implements ICalendarController {
         sbValue.append(" ");
       }
     }
-    String newValue = sbValue.toString();
+    result.newValue = sbValue.toString();
 
-    IEvent matchingEvent = library.getActiveCalendar().findEvent(eventSubject, fromDateTime);
+    return result;
+  }
+
+
+
+  /**
+   * Handles edit commands like editing a single event, future events, or an entire series.
+   *
+   * @param command the user's edit command
+   */
+  private void handleEditEvent(String command) {
+    EditCommand editCmd = parseEditCommand(command);
+
+    IEvent matchingEvent = library.getActiveCalendar().findEvent(editCmd.subject, editCmd.fromDateTime);
     if (matchingEvent == null) {
-      System.out.println("Error: Event not found.");
+      view.displayError("Error: Event not found.");
       return;
     }
 
-    switch (editType.toLowerCase()) {
+    switch (editCmd.editType) {
       case "edit":
-        handleEditSingleEvent(matchingEvent, property, newValue);
+        handleEditSingleEvent(matchingEvent, editCmd.property, editCmd.newValue);
         break;
       case "edits":
-        handleEditFutureEvents(matchingEvent, property, newValue);
+        handleEditFutureEvents(matchingEvent, editCmd.property, editCmd.newValue);
         break;
       case "edit series":
-        handleEditWholeSeries(matchingEvent, property, newValue);
+        handleEditWholeSeries(matchingEvent, editCmd.property, editCmd.newValue);
         break;
       default:
-        // should never happen
+        throw new IllegalStateException("Unexpected edit type.");
     }
   }
+
 
   /**
    * Edits exactly one occurrence (the matchingEvent). If this event is part of a series,
@@ -471,57 +495,6 @@ public class CalendarController implements ICalendarController {
     int count = library.getActiveCalendar().editWholeSeries(event, property, newValue,
             DATE_TIME_FORMAT);
     System.out.println("Modified " + count + " event(s) in the entire series.");
-  }
-
-  /**
-   * Creates a new Event object by copying all fields of `base`, then changing exactly one property.
-   * The returned Event preserves the original seriesId if it was non-null.
-   *
-   * @param base     the existing Event to copy
-   * @param property which property to change (subject, start, end, location, description, status)
-   * @param newValue the new value for that property (string or date/time text)
-   * @return a brand‐new Event reflecting the single change
-   * @throws IllegalArgumentException if property is unrecognized or newValue badly formatted
-   */
-  private Event createModifiedEvent(Event base, String property, String newValue) {
-    Event copy = new Event(
-            base.getSubject(),
-            base.getStart(),
-            base.getEnd(),
-            base.getLocation(),
-            base.getDescription(),
-            base.getStatus());
-
-    if (base.getSeriesId() != null) {
-      copy.setSeriesId(base.getSeriesId());
-    }
-
-    switch (property.toLowerCase()) {
-      case "subject":
-        copy.setSubject(newValue);
-        break;
-      case "start":
-        LocalDateTime newStart = LocalDateTime.parse(newValue, DATE_TIME_FORMAT);
-        copy.setStart(newStart);
-        break;
-      case "end":
-        LocalDateTime newEnd = LocalDateTime.parse(newValue, DATE_TIME_FORMAT);
-        copy.setEnd(newEnd);
-        break;
-      case "location":
-        copy.setLocation(newValue);
-        break;
-      case "description":
-        copy.setDescription(newValue);
-        break;
-      case "status":
-        copy.setPublic(newValue.equalsIgnoreCase("public")
-                || newValue.equalsIgnoreCase("true"));
-        break;
-      default:
-        throw new IllegalArgumentException("Invalid property: " + property);
-    }
-    return copy;
   }
 
   /**
@@ -718,6 +691,44 @@ public class CalendarController implements ICalendarController {
     System.out.println("Created calendar \"" + name + "\" with timezone " + zoneId);
   }
 
+  private void handleCreateCalendarWithFlags(String command) {
+    String[] tokens = command.split("\\s+");
+    String name = null;
+    String timezone = null;
+    for (int i = 0; i < tokens.length; i++) {
+      if (tokens[i].equalsIgnoreCase("--name") && i + 1 < tokens.length) {
+        name = tokens[i + 1];
+      }
+      if (tokens[i].equalsIgnoreCase("--timezone") && i + 1 < tokens.length) {
+        timezone = tokens[i + 1];
+      }
+    }
+    if (name != null && timezone != null) {
+      library.createCalendar(name, timezone);
+      view.displayMessage("Created calendar \"" + name + "\" with timezone " + timezone);
+    } else {
+      view.displayError("Missing --name or --timezone argument.");
+    }
+  }
+
+  private void handleUseCalendarWithFlags(String command) {
+    String[] tokens = command.split("\\s+");
+    String name = null;
+    for (int i = 0; i < tokens.length; i++) {
+      if (tokens[i].equalsIgnoreCase("--name") && i + 1 < tokens.length) {
+        name = tokens[i + 1];
+      }
+    }
+    if (name != null) {
+      library.useCalendar(name);
+      view.displayMessage("Switched to calendar \"" + name + "\"");
+    } else {
+      view.displayError("Missing --name argument.");
+    }
+  }
+
+
+
   /**
    * Handles the "switch calendar" command.
    * Extracts the calendar name and sets it as the active calendar.
@@ -853,22 +864,29 @@ public class CalendarController implements ICalendarController {
 
   private void handleCopyEventsOnDate(String command) {
     try {
-      int onIdx = command.indexOf(" on ");
-      int targetIdx = command.indexOf(" --target ");
-      int toIdx = command.indexOf(" to ");
 
-      if (onIdx == -1 || targetIdx == -1 || toIdx == -1) {
-        throw new IllegalArgumentException("Invalid copy events on syntax.");
+      String[] tokens = command.split("\\s+");
+      LocalDate sourceDate = null;
+      String targetCalendar = null;
+      LocalDate destinationDate = null;
+
+      for (int i = 0; i < tokens.length; i++) {
+        if (tokens[i].equalsIgnoreCase("on") && i + 1 < tokens.length) {
+          sourceDate = LocalDate.parse(tokens[i + 1]);
+        }
+        if (tokens[i].equalsIgnoreCase("--target") && i + 1 < tokens.length) {
+          targetCalendar = tokens[i + 1];
+        }
+        if (tokens[i].equalsIgnoreCase("to") && i + 1 < tokens.length) {
+          destinationDate = LocalDate.parse(tokens[i + 1]);
+        }
       }
 
-      String srcDateStr = command.substring(onIdx + 4, targetIdx).trim();
-      String targetCal = command.substring(targetIdx + 10, toIdx).trim();
-      String destDateStr = command.substring(toIdx + 4).trim();
+      if (sourceDate == null || targetCalendar == null || destinationDate == null) {
+        throw new IllegalArgumentException("Missing required arguments for copy events on command.");
+      }
 
-      LocalDate srcDate = LocalDate.parse(srcDateStr);
-      LocalDate destDate = LocalDate.parse(destDateStr);
-
-      int count = library.copyEventsOnDateToCalendar(srcDate, targetCal, destDate);
+      int count = library.copyEventsOnDateToCalendar(sourceDate, targetCalendar, destinationDate);
       System.out.println("Copied " + count + " event(s).");
     } catch (Exception e) {
       System.out.println("Error: " + e.getMessage());
@@ -877,25 +895,42 @@ public class CalendarController implements ICalendarController {
 
   private void handleCopyEventsBetweenDates(String command) {
     try {
-      int betweenIdx = command.indexOf(" between ");
-      int andIdx = command.indexOf(" and ");
-      int targetIdx = command.indexOf(" --target ");
-      int toIdx = command.indexOf(" to ");
+      // Expected syntax:
+      // copy events between <start> and <end> --source <sourceCalendar> --target <targetCalendar> to <date>
 
-      if (betweenIdx == -1 || andIdx == -1 || targetIdx == -1 || toIdx == -1) {
-        throw new IllegalArgumentException("Invalid copy events between syntax.");
+      String[] tokens = command.split("\\s+");
+      LocalDate startDate = null;
+      LocalDate endDate = null;
+      String sourceCalendar = null;
+      String targetCalendar = null;
+      LocalDate destinationStartDate = null;
+
+      for (int i = 0; i < tokens.length; i++) {
+        if (tokens[i].equalsIgnoreCase("between") && i + 1 < tokens.length) {
+          startDate = LocalDate.parse(tokens[i + 1]);
+        }
+        if (tokens[i].equalsIgnoreCase("and") && i + 1 < tokens.length) {
+          endDate = LocalDate.parse(tokens[i + 1]);
+        }
+        if (tokens[i].equalsIgnoreCase("--source") && i + 1 < tokens.length) {
+          sourceCalendar = tokens[i + 1];
+        }
+        if (tokens[i].equalsIgnoreCase("--target") && i + 1 < tokens.length) {
+          targetCalendar = tokens[i + 1];
+        }
+        if (tokens[i].equalsIgnoreCase("to") && i + 1 < tokens.length) {
+          destinationStartDate = LocalDate.parse(tokens[i + 1]);
+        }
       }
 
-      String startStr = command.substring(betweenIdx + 9, andIdx).trim();
-      String endStr = command.substring(andIdx + 5, targetIdx).trim();
-      String targetCal = command.substring(targetIdx + 10, toIdx).trim();
-      String destStartStr = command.substring(toIdx + 4).trim();
+      if (startDate == null || endDate == null || sourceCalendar == null
+              || targetCalendar == null || destinationStartDate == null) {
+        throw new IllegalArgumentException("Missing required arguments for"
+                + " copy events between command.");
+      }
 
-      LocalDateTime start = parseDateTime(startStr);
-      LocalDateTime end = parseDateTime(endStr);
-      LocalDateTime destStart = parseDateTime(destStartStr);
-
-      int count = library.copyEventsBetweenDatesToCalendar(start, end, targetCal, destStart);
+      int count = library.copyEventsBetweenDatesToCalendar(
+              sourceCalendar, targetCalendar, startDate, endDate, destinationStartDate);
       System.out.println("Copied " + count + " event(s).");
     } catch (Exception e) {
       System.out.println("Error: " + e.getMessage());
@@ -918,7 +953,7 @@ public class CalendarController implements ICalendarController {
   @Override
   public void runGUI() {
     SwingUtilities.invokeLater(() -> {
-      CalendarGUIView gui = new CalendarGUIView(this);
+      CalendarGUIView gui = new CalendarGUIView();
       setGUIView(gui);
       gui.setVisible(true);
     });

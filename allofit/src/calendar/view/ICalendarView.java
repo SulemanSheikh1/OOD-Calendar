@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import calendar.model.Event;
+import calendar.model.IEvent;
 
 /**
  * This interface handles all user outputs in the calendar.
@@ -27,14 +28,14 @@ public interface ICalendarView {
    *
    * @param events the list of events
    */
-  void displayEvents(List<Event> events);
+  void displayEvents(List<IEvent> events);
 
   /**
    * Displays a single event.
    *
    * @param event the event.
    */
-  void displayEvent(Event event);
+  void displayEvent(IEvent event);
 
   /**
    * Formats a LocalDateTime into a string.
@@ -43,4 +44,19 @@ public interface ICalendarView {
    * @return the formatted string
    */
   String formatDateTime(LocalDateTime dateTime);
+
+  /**
+   * Displays a general success or info message to the user.
+   *
+   * @param message the message to display
+   */
+  void displayMessage(String message);
+
+  /**
+   * Displays an error message to the user.
+   *
+   * @param error the error message to display
+   */
+  void displayError(String error);
+
 }

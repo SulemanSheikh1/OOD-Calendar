@@ -131,5 +131,13 @@ public interface IEvent {
    */
   boolean isSame(Event event);
 
+  /**
+   * Creates and returns a new copy of this event with the provided start time.
+   * The duration of the event (original end minus original start) is preserved,
+   * so the new end time is automatically adjusted relative to the new start.
+   *
+   * @param newStart the new start date and time for the copied event
+   * @return a new IEvent instance with updated start and end times, preserving subject and other properties
+   */
   IEvent copyWithNewTime(LocalDateTime newStart);
 }

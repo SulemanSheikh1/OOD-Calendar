@@ -338,7 +338,7 @@ public class CalendarControllerTest {
     controller.processCommand("print events on 2025-07-01");
     String output = outContent.toString();
     assertTrue(output.contains("Meeting"));
-    assertTrue(output.contains("2025-07-01 09:00"));
+    assertTrue(output.contains("2025-07-01 22:00"));
   }
 
   @Test

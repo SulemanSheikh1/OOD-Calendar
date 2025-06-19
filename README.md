@@ -66,6 +66,52 @@ Run headless mode with a command script:
 ✅	Missing `exit` in headless mode prints a message and quits
 ✅	Interactive and headless modes both supported
 
+### Design Changes and Justifications
+1. Added CalendarGUIView Class 
+Change: Created a new CalendarGUIView class implementing a fully functional Java Swing graphical
+interface.
+Justification: This provides the required GUI mode for event creation, schedule viewing, and
+interaction. Follows MVC separation by cleanly isolating the view from controller and model layers.
+
+2. Introduced ICalendarGUIView Interface
+Change: Added an interface ICalendarGUIView to decouple the controller from the concrete GUI view
+class.
+Justification: Enables proper MVC separation of concerns, allows easy unit testing of controllers
+without reliance on actual Swing components, and improves code flexibility and maintainability.
+
+3. Updated CalendarGUIController to depend on interfaces
+Change: Modified CalendarGUIController to depend on the ICalendarGUIView interface rather
+than the concrete CalendarGUIView class.
+Justification: Follows SOLID principles, particularly Dependency Inversion Principle, allowing
+unit tests to substitute dummy or stub views while testing controller logic. Fully enables
+controller-level unit tests for GUI logic.
+
+4. Added GUI Support for Editing Events
+Change: Added a new "Edit Selected Event" button in the GUI, allowing users to select an existing
+event, open an edit dialog, and modify the event’s subject, start, and end times.
+Justification: Satisfies extra credit feature requirements. Improves GUI usability by enabling
+full event lifecycle management directly through the interface.
+
+5. Extended Controller Interface ICalendarGUIController with editEvent Method
+Change: Added editEvent(IEvent event, String newSubject, String newStart, String newEnd) to 
+ICalendarGUIController.
+Justification: Supports event editing initiated by the GUI, preserves proper separation of
+responsibilities between view and controller. 
+
+6. Added getEvents() Method to Model
+Change: Added a new getEvents() method to the model to allow test cases to verify model state
+after controller actions.
+Justification: Facilitates controller-level unit testing by providing direct access to model state
+for test verification.
+
+7. Introduced Full JUnit 4 Test Class for GUI Controller
+Change: Added CalendarGUIControllerTest that tests createEvent, loadEventsFromDate, and editEvent
+using the real model and real controller logic.
+Justification: Ensures correctness of controller behavior in reaction to GUI actions, exactly as 
+required by assignment testing guidelines. Fulfills testing requirements for the GUI controller
+without directly testing GUI widgets.
+
+
 3. Team Contributions
 
 * **Suleman Sheikh (50%)**

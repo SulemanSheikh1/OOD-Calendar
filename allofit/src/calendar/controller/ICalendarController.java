@@ -3,6 +3,7 @@ package calendar.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import calendar.gui.CalendarGUIView;
 import calendar.model.Event;
 
 /**
@@ -46,4 +47,11 @@ public interface ICalendarController {
    * @return a list of events on that date
    */
   List<Event> getEventsOnDate(LocalDate date);
+
+  /**
+   * Sets the GUI view for the calendar application.
+   *
+   * @param gui the GUI view to use
+   */
+  public void setGUIView(CalendarGUIView gui);
 }

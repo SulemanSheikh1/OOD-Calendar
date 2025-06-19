@@ -59,14 +59,14 @@ public class CalendarView implements ICalendarView {
    *
    * @param events the list of events
    */
-  public void displayEvents(List<Event> events) {
+  public void displayEvents(List<IEvent> events) {
     if (events.isEmpty()) {
       System.out.println("No events found");
       return;
     }
 
     System.out.println("\nEvents:");
-    for (Event event : events) {
+    for (IEvent event : events) {
       System.out.println(formatEvent(event));
     }
   }
@@ -76,7 +76,7 @@ public class CalendarView implements ICalendarView {
    *
    * @param event the event.
    */
-  public void displayEvent(Event event) {
+  public void displayEvent(IEvent event) {
     System.out.println("\nEvent details:");
     System.out.println(formatEvent(event));
   }
@@ -118,5 +118,16 @@ public class CalendarView implements ICalendarView {
   public String formatDateTime(LocalDateTime dateTime) {
     return dateTime.format(DATE_TIME_FORMATTER);
   }
+
+  @Override
+  public void displayMessage(String message) {
+    System.out.println(message);
+  }
+
+  @Override
+  public void displayError(String error) {
+    System.out.println("Error: " + error);
+  }
+
 
 }
