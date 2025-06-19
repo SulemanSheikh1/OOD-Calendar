@@ -138,7 +138,7 @@ public interface IEvent {
    *
    * @param newStart the new start date and time for the copied event
    * @return a new IEvent instance with updated start and end times, preserving subject
-   * and other properties
+   *      and other properties
    */
   IEvent copyWithNewTime(LocalDateTime newStart);
 }

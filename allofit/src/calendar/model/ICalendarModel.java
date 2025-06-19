@@ -79,7 +79,7 @@ public interface ICalendarModel {
    *
    * @param date the starting date from which to retrieve events (inclusive)
    * @return a list of events starting from the specified date, sorted by start time,
-   * limited to 10 events
+   *      limited to 10 events
    */
   List<IEvent> getEventsFromDate(LocalDate date);
 

@@ -2,6 +2,10 @@ package calendar.gui;
 
 import calendar.model.IEvent;
 
+/**
+ * Interface for the Calendar GUI Controller.
+ * Defines the operations that the GUI view can invoke on the controller.
+ */
 public interface ICalendarGUIController {
 
   /**

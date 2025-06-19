@@ -1,10 +1,19 @@
 package calendar.gui;
 
-import calendar.model.*;
+import calendar.model.IEvent;
 
-import javax.swing.*;
+import javax.swing.JTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import javax.swing.border.TitledBorder;
-import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
